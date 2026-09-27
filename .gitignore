@@ -1,0 +1,6 @@
+# Local tool state
+.impeccable/
+
+# OS files
+.DS_Store
+Thumbs.db

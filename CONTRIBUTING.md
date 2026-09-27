@@ -1,0 +1,100 @@
+# Contributing to Walkmethrough
+
+Thanks for helping. Bug reports, ideas and pull requests are all welcome.
+
+## Before you start
+
+- **Bugs:** open an issue with what you did, what you expected, and what
+  happened. If a walkthrough or feedback file is involved, attach it (or a
+  trimmed-down copy).
+- **Features and format changes:** open an issue first. The file formats are a
+  contract with every agent that writes them, so changes go through the
+  [specification](spec.md) before the code.
+- **Security issues:** don't open a public issue; use
+  [private vulnerability reporting](https://github.com/mepolabs/walkmethrough/security/advisories/new).
+
+## Repository layout
+
+| Path | What |
+|------|------|
+| [`spec.md`](spec.md) | The specification: file formats, behaviour, decisions (§3) and roadmap (§8) |
+| [`schema/`](schema/) | JSON Schemas for the walkthrough and feedback files; the normative format |
+| [`skills/walkthrough/SKILL.md`](skills/walkthrough/SKILL.md) | The agent skill: how agents write walkthroughs and apply feedback. Kept at `skills/<name>/SKILL.md` so `gh skill`, `npx skills` and Claude Code all find it |
+| [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) | Makes this repository a Claude Code plugin marketplace |
+| [`plugins/walkmethrough-stop-hook/`](plugins/walkmethrough-stop-hook/) | Optional Claude Code `Stop` hook, as its own plugin |
+| [`extension/`](extension/) | The VS Code extension (TypeScript) |
+| [`examples/order-api/`](examples/order-api/) | A small sample app with hand-written walkthroughs; used by the tests |
+
+Inside `extension/src/`:
+
+- `core/` holds the logic: parsing, anchors, Markdown sanitising, feedback
+  edits, diff and coverage. It never imports `vscode`, so it's unit-tested with
+  plain `node:test`.
+- The files next to it (`player.ts`, `panel.ts`, `inline.ts`, `review.ts`,
+  `coverageView.ts`) are the VS Code glue. They're covered by integration tests
+  that run in a real VS Code.
+
+## Build and test
+
+You need Node.js 18+, git, and VS Code.
+
+```sh
+cd extension
+npm ci
+npm run typecheck
+npm test                  # unit tests (node:test), including git runs in a temp repo
+npm run test:integration  # downloads a test VS Code and runs it on examples/order-api
+npm run package           # builds walkmethrough-<version>.vsix
+```
+
+The integration tests download VS Code into `extension/.vscode-test/` the
+first time (about 150 MB) and need a display. On a headless Linux machine, run
+them under `xvfb-run -a`. They create and remove temporary files in
+`examples/order-api/` and put the example feedback file back when they finish.
+
+### The skill and the Claude Code plugins
+
+From the repository root:
+
+```sh
+claude plugin validate .                                  # marketplace.json and the plugins it lists
+npx skills add . --list                                   # what `npx skills` finds (should be: walkthrough)
+```
+
+To install your working copy into Claude Code, run
+`claude plugin marketplace add /path/to/walkmethrough` and
+`claude plugin install walkmethrough@walkmethrough`. Afterwards, remove it with
+`claude plugin marketplace remove walkmethrough`.
+
+When you change the skill or the hook, bump `version` in
+`.claude-plugin/marketplace.json` (and in `plugins/walkmethrough-stop-hook/.claude-plugin/plugin.json`
+for the hook) so Claude Code users receive the update.
+
+## Run the extension from source
+
+Open the `extension/` folder in VS Code and press **F5**. That builds the
+extension and opens a second VS Code window on `examples/order-api` with it
+loaded. Run **Walkthrough: Open…** there. After changing the code, run
+**Developer: Reload Window** in that second window.
+
+To try it on another repository:
+
+```sh
+code --extensionDevelopmentPath=/path/to/walkmethrough/extension /path/to/other-repo
+```
+
+## Pull requests
+
+- Keep each pull request to one change, and describe what it does and why.
+- Add or update tests: unit tests for anything in `core/`, and an integration
+  check in `test-integration/suite.ts` for editor behaviour.
+- If behaviour or a file format changes, update `spec.md` and, if needed,
+  `schema/` and `skills/walkthrough/SKILL.md` in the same pull request.
+- Treat walkthrough and feedback text as untrusted input (spec §5.2.2): never
+  render raw HTML, and never let file content run a command.
+- Match the existing style: small modules, comments that explain why, and no
+  new runtime dependencies without a good reason.
+- `npm run typecheck`, `npm test` and `npm run test:integration` should pass.
+
+By contributing, you agree that your contributions are licensed under the
+project's [MIT License](LICENSE).

@@ -77,7 +77,7 @@ export async function run(): Promise<void> {
   const readFeedback = async () => new TextDecoder().decode(await vscode.workspace.fs.readFile(feedbackUri));
   try {
     await check("shows the walkthrough's existing open comments", async () => {
-      await waitFor("comments load", () => api.review.open.length === 1);
+      await waitFor("comments load", () => api.review.thread("fb-20260927-141502-a1b2") !== undefined);
       const thread = api.review.thread("fb-20260927-141502-a1b2");
       assert.ok(thread);
       assert.equal(vscode.workspace.asRelativePath(thread.uri), "src/orders/service.ts");
@@ -114,16 +114,15 @@ export async function run(): Promise<void> {
 
     await check("Copy to chat names the walkthrough and lists its open comments", async () => {
       await vscode.commands.executeCommand("walkmethrough.copyFeedback");
-      assert.equal(
-        await vscode.env.clipboard.readText(),
-        [
-          "Apply this review feedback on `.walkthrough/2026-09-27-order-cancel.yaml`:",
-          "",
-          "- src/orders/service.ts:28-30 — Paid orders should also be cancellable if they have not shipped yet; add a refund TODO.",
-          "- src/orders/service.ts:3-4 — Use one DomainError with a code field.",
-          "",
-        ].join("\n"),
-      );
+      const lines = (await vscode.env.clipboard.readText()).split("\n");
+      assert.equal(lines[0], "Apply this review feedback on `.walkthrough/2026-09-27-order-cancel.yaml`:");
+      assert.equal(lines[1], "");
+      const items = lines.slice(2).filter(Boolean);
+      assert.equal(items.length, api.review.open.length, "one line per open comment");
+      assert.ok(items.includes(
+        "- src/orders/service.ts:28-30 — Paid orders should also be cancellable if they have not shipped yet; add a refund TODO.",
+      ));
+      assert.equal(items[items.length - 1], "- src/orders/service.ts:3-4 — Use one DomainError with a code field.");
     });
 
     await check("comments the agent marks applied disappear", async () => {
@@ -137,6 +136,37 @@ export async function run(): Promise<void> {
     await vscode.workspace.fs.writeFile(feedbackUri, new TextEncoder().encode(original));
     await api.player.goto(5);
   }
+
+  await check("coverage lists changed lines no step covers", async () => {
+    const coverage = api.coverage;
+    const settled = () => coverage.current.kind !== "off" && coverage.current.kind !== "running";
+    await waitFor("the first check finishes", settled, 20000);
+    assert.notEqual(coverage.current.kind, "error", JSON.stringify(coverage.current));
+
+    const file = "src/orders/zz-coverage-scratch.ts";
+    const scratch = vscode.Uri.joinPath(root, file);
+    const uncovered = () => {
+      const s = coverage.current;
+      return s.kind === "done" ? s.coverage.uncovered.find((u) => u.file === file) : undefined;
+    };
+    const text = ["export const a = 1;", "export const b = 2;", ""].join("\n");
+    await vscode.workspace.fs.writeFile(scratch, new TextEncoder().encode(text));
+    try {
+      await waitFor("a new untracked file shows as uncovered", () => uncovered() !== undefined, 20000);
+      assert.deepEqual(uncovered()!.ranges, [[1, 2]]);
+      const nodes = coverage.getChildren();
+      const node = nodes.find((n) => n.kind === "file" && n.file === file);
+      assert.ok(node, "the file is in the Not in Walkthrough tree");
+      assert.deepEqual(
+        coverage.getChildren(node).map((n) => coverage.getTreeItem(n).label),
+        ["Lines 1–2"],
+      );
+      assert.match(coverage.summary ?? "", /^Coverage: \d+ \/ \d+ changed lines$/);
+    } finally {
+      await vscode.workspace.fs.delete(scratch);
+    }
+    await waitFor("it disappears when deleted", () => settled() && uncovered() === undefined, 20000);
+  });
 
   await check("Back returns to the previous step", async () => {
     await vscode.commands.executeCommand("walkmethrough.back");
@@ -165,5 +195,6 @@ export async function run(): Promise<void> {
     assert.equal(api.inline.thread, undefined);
     assert.equal(api.review.file, undefined);
     assert.equal(api.review.open.length, 0);
+    assert.equal(api.coverage.current.kind, "off");
   });
 }

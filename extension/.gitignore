@@ -3,5 +3,6 @@ dist/
 out/
 out-test/
 schema/
+LICENSE
 *.vsix
 .vscode-test/

@@ -1,0 +1,66 @@
+# Walkmethrough
+
+Play back code walkthroughs written by your coding agent, step by step, and send
+review comments back to it.
+
+At the end of a session, your agent (Claude Code, Codex, GitHub Copilot, Cursor)
+writes `.walkthrough/<session>.yaml`: the code it changed, in execution order,
+with a short explanation per step. This extension turns that file into a guided
+review.
+
+## Features
+
+- **Step through the change.** **Next** / **Back** (Alt+] / Alt+[) open each
+  step's file, highlight its lines and show the explanation right below them,
+  as well as in the **Walkthrough** view in the Explorer.
+- **Follows the code.** Each step records its first line, so the highlight
+  still lands in the right place after later edits, and tells you when it moved.
+- **Comment like on a pull request.** Click **+** in the gutter, or 💬 on a step.
+  Comments are saved next to the walkthrough in `<session>.feedback.yaml`.
+- **Send feedback to the agent.** **Copy feedback to chat** puts every open
+  comment on the clipboard, ready to paste. When the agent marks a comment
+  `applied`, it disappears from the editor.
+- **Coverage check.** The **Not in Walkthrough** view lists changed lines no step
+  explains (from `git diff`), and marks them in the gutter.
+- **Safe with untrusted walkthroughs.** No raw HTML, no images, no command links:
+  a walkthrough from someone else's pull request can't run anything.
+
+## Getting started
+
+1. Add the agent skill to your repository. The skill is the part that makes
+   your agent write walkthroughs. See the
+   [install guide](https://github.com/mepolabs/walkmethrough#2-the-agent-skill).
+2. Let your agent finish a change, or ask it to "write a walkthrough".
+3. Run **Walkthrough: Open…** and pick the walkthrough.
+
+The extension activates in workspaces that contain `.walkthrough/*.yaml`.
+The coverage check needs `git` on your `PATH`.
+
+## Commands
+
+| Command | Key |
+|---------|-----|
+| Walkthrough: Open… | |
+| Walkthrough: Next Step | Alt+] |
+| Walkthrough: Previous Step | Alt+[ |
+| Walkthrough: Go to Step… | |
+| Walkthrough: Comment on Step | |
+| Walkthrough: Copy Feedback to Chat | |
+| Walkthrough: Refresh Coverage | |
+| Walkthrough: Close | |
+
+## Settings
+
+- `walkmethrough.inlineExplanation` (default `true`): show each step's
+  explanation in the editor below its lines, as well as in the side panel.
+
+Theme colours: `walkmethrough.stepHighlight`, `walkmethrough.stepGutter`,
+`walkmethrough.uncoveredGutter`.
+
+## More
+
+- [Project README](https://github.com/mepolabs/walkmethrough#readme): install the skill, the file formats
+- [Specification](https://github.com/mepolabs/walkmethrough/blob/main/spec.md)
+- [Issues](https://github.com/mepolabs/walkmethrough/issues)
+
+MIT licensed.

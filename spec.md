@@ -141,7 +141,7 @@ fields. The extension owns everything else (§5.3).
 
 ## 5. Component specs
 
-### 5.1 Agent skill (`skill/walkthrough/SKILL.md`)
+### 5.1 Agent skill (`skills/walkthrough/SKILL.md`)
 
 - Frontmatter `name: walkthrough` and a description that triggers at the end of
   any session that changed code, and when the user says "apply walkthrough feedback".
@@ -156,9 +156,16 @@ fields. The extension owns everything else (§5.3).
   open feedback, and say which), read its `<session>.feedback.yaml`, act on
   every `status: open` entry, set each to `applied`, and summarise what changed.
   Never read or change another walkthrough's feedback file.
-- Installation: `.agents/skills/walkthrough/` (Codex, Copilot, Cursor) and a copy
-  in `.claude/skills/walkthrough/` (Claude Code).
-- Claude Code only: an optional `Stop` hook (`skill/hooks/require-walkthrough.mjs`)
+- Location: `skills/walkthrough/` at the repository root, the `skills/*/SKILL.md`
+  layout that `gh skill`, `npx skills` and Claude Code plugins all discover.
+- Installation (README): the Claude Code plugin marketplace
+  (`.claude-plugin/marketplace.json`, plugin `walkmethrough`, whose source is the
+  repository root and which lists only `./skills/walkthrough`); `gh skill install`
+  (Copilot, `.agents/skills/`); `npx skills add` (any agent); or copying the
+  folder to `.agents/skills/walkthrough/` (Codex, Copilot, Cursor) and/or
+  `.claude/skills/walkthrough/` (Claude Code).
+- Claude Code only: an optional `Stop` hook, shipped as its own plugin
+  (`plugins/walkmethrough-stop-hook/`) so it can be enabled per project,
   blocks the first stop of a session when the working tree has changes and no
   walkthrough was written since they were made. It honours `stop_hook_active`
   so it can never loop.
@@ -266,13 +273,29 @@ unit-tested:
 
 ### 5.4 Coverage check (roadmap step 5)
 
-- Runs `git diff --unified=0 <base_commit> <head_commit>` when both are set,
-  otherwise `git diff --unified=0 <base_commit>` against the working tree
-  (`HEAD` if `base_commit` is absent), and collects added/modified line ranges per file.
-- A changed line is *covered* if it falls in some step's resolved range.
-- Uncovered ranges are shown in a **Not in walkthrough** tree and as a subtle
-  gutter marker; the overview shows `covered / changed` lines.
-- Deleted-only hunks are listed separately (they have no lines to highlight).
+- Runs `git diff --unified=0 --ignore-blank-lines <base_commit> <head_commit>`
+  when both are set (*commits* mode), otherwise `git diff --unified=0
+  --ignore-blank-lines <base_commit>` against the working tree (`HEAD` if
+  `base_commit` is absent; *worktree* mode), limited to the workspace folder and
+  excluding `.walkthrough/`, and collects added/modified line ranges per file.
+- In worktree mode, untracked files (`git ls-files --others --exclude-standard`)
+  count as changed in full: agents create new files all the time and `git diff`
+  doesn't see them. Binary files are skipped.
+- A changed line is *covered* if it falls in some step's range: the recorded
+  `lines` in commits mode (exact at `head_commit`), or the range resolved by its
+  anchor (§5.2.1) in the file on disk in worktree mode.
+- Uncovered ranges are shown in a **Not in Walkthrough** view (Explorer, only
+  while a walkthrough is open; clicking a range opens it) and as a dotted gutter
+  marker (theme colour `walkmethrough.uncoveredGutter`); the panel's overview
+  shows `Coverage: covered / changed lines`.
+- Deleted-only hunks are listed under **Removed code**, unless they sit right
+  before, inside or right after a step's range (that step is taken to explain them).
+- When there is nothing to compare (no changes, e.g. no `base_commit` and the
+  agent already committed), the view says so instead of reporting full coverage.
+  When git fails (not a repo, unknown commit) it shows the reason.
+- In worktree mode the check re-runs when files change (debounced), and files
+  edited after the walkthrough file was written are labelled "edited after the
+  walkthrough", since those lines may be later edits such as applied feedback.
 
 ## 6. Caveats and mitigations
 
@@ -291,8 +314,9 @@ unit-tested:
 spec.md                      this document
 schema/                      JSON Schemas for both files (normative)
 examples/                    hand-made walkthroughs over a tiny sample app
-skill/walkthrough/SKILL.md   the agent skill
-skill/hooks/                 optional Claude Code Stop hook
+skills/walkthrough/SKILL.md  the agent skill
+.claude-plugin/              Claude Code plugin marketplace (marketplace.json)
+plugins/walkmethrough-stop-hook/  optional Claude Code Stop hook, as a plugin
 extension/                   VS Code extension (TypeScript)
   src/core/                  pure logic, no `vscode` import (unit-tested with node:test)
   src/                       VS Code glue: player, panel, commands
@@ -303,10 +327,10 @@ extension/                   VS Code extension (TypeScript)
 | # | Step | Status |
 |---|------|--------|
 | 1 | **Schema** — freeze v1 fields, two hand-made examples | done |
-| 2 | **Skill** — SKILL.md; test on real sessions in Claude Code and Codex | written; real-session testing pending |
+| 2 | **Skill** — SKILL.md; test on real sessions in Claude Code and Codex | written. 2026-09-28: write mode tested in a real Claude Code session (walkthrough decent, played back and commented on in VS Code). Pending: apply mode with a real agent; Codex |
 | 3 | **Player** — load YAML, highlight, Next/Back, explanation panel | done (first cut), plus inline explanation in the editor; unit and VS Code integration tests pass. Planned: seen-step progress, **Show as written** |
 | 4 | **Comments** — native threads → `<session>.feedback.yaml`, copy-to-chat | done (first cut); unit and VS Code integration tests pass |
-| 5 | **Coverage check** — diff vs `base_commit`, show uncovered lines | not started |
+| 5 | **Coverage check** — diff vs `base_commit`, show uncovered lines | done (first cut); unit tests (incl. a real temp git repo) and VS Code integration test pass |
 | 6 | **Ship** — Marketplace + Open VSX; installer placing the skill per harness | not started |
 
 ## 9. Out of scope for v1

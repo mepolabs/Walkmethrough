@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { isWalkthroughFileName } from "./core/walkthrough";
+import { CoverageCheck } from "./coverageView";
 import { InlineStep } from "./inline";
 import { Panel } from "./panel";
 import { Player } from "./player";
@@ -12,6 +13,7 @@ export interface Api {
   player: Player;
   inline: InlineStep;
   review: ReviewComments;
+  coverage: CoverageCheck;
 }
 
 export function activate(context: vscode.ExtensionContext): Api | undefined {
@@ -23,7 +25,8 @@ export function activate(context: vscode.ExtensionContext): Api | undefined {
   const comments = vscode.comments.createCommentController("walkmethrough", "Walkthrough");
   const inline = new InlineStep(comments, player);
   const review = new ReviewComments(comments, player, root);
-  const panel = new Panel(player, review);
+  const coverage = new CoverageCheck(player, root);
+  const panel = new Panel(player, review, coverage);
   const status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
   status.command = "walkmethrough.next";
   status.tooltip = "Walkthrough: next step";
@@ -41,6 +44,7 @@ export function activate(context: vscode.ExtensionContext): Api | undefined {
     inline,
     review,
     comments,
+    coverage,
     status,
     vscode.window.registerWebviewViewProvider(Panel.id, panel),
     vscode.commands.registerCommand("walkmethrough.open", (uri?: vscode.Uri) => openCommand(root, player, uri)),
@@ -53,6 +57,7 @@ export function activate(context: vscode.ExtensionContext): Api | undefined {
     vscode.commands.registerCommand("walkmethrough.close", () => player.close()),
     vscode.commands.registerCommand("walkmethrough.commentOnStep", () => review.commentOnStep()),
     vscode.commands.registerCommand("walkmethrough.copyFeedback", () => review.copyToChat()),
+    vscode.commands.registerCommand("walkmethrough.refreshCoverage", () => coverage.refresh()),
     vscode.commands.registerCommand("walkmethrough.comment.create", (r: vscode.CommentReply) => review.create(r)),
     vscode.commands.registerCommand("walkmethrough.comment.cancelDraft", (r: vscode.CommentReply) =>
       review.cancelDraft(r),
@@ -62,7 +67,7 @@ export function activate(context: vscode.ExtensionContext): Api | undefined {
     vscode.commands.registerCommand("walkmethrough.comment.cancelEdit", (c: FeedbackComment) => review.cancelEdit(c)),
     vscode.commands.registerCommand("walkmethrough.comment.delete", (c: FeedbackComment) => review.delete(c)),
   );
-  return { player, inline, review };
+  return { player, inline, review, coverage };
 }
 
 export function deactivate(): void {}

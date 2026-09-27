@@ -9,6 +9,10 @@
     "type": "git",
     "url": "https://github.com/mepolabs/walkmethrough"
   },
+  "homepage": "https://github.com/mepolabs/walkmethrough#readme",
+  "bugs": {
+    "url": "https://github.com/mepolabs/walkmethrough/issues"
+  },
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -33,7 +37,7 @@
     "commands": [
       {
         "command": "walkmethrough.open",
-        "title": "Open\u2026",
+        "title": "Open…",
         "category": "Walkthrough",
         "icon": "$(book)"
       },
@@ -53,7 +57,7 @@
       },
       {
         "command": "walkmethrough.goto",
-        "title": "Go to Step\u2026",
+        "title": "Go to Step…",
         "category": "Walkthrough",
         "enablement": "walkmethrough.playing"
       },
@@ -103,6 +107,13 @@
       {
         "command": "walkmethrough.comment.cancelEdit",
         "title": "Cancel"
+      },
+      {
+        "command": "walkmethrough.refreshCoverage",
+        "title": "Refresh Coverage",
+        "category": "Walkthrough",
+        "icon": "$(refresh)",
+        "enablement": "walkmethrough.playing"
       }
     ],
     "configuration": {
@@ -133,6 +144,11 @@
           "type": "webview",
           "id": "walkmethrough.panel",
           "name": "Walkthrough"
+        },
+        {
+          "id": "walkmethrough.coverage",
+          "name": "Not in Walkthrough",
+          "when": "walkmethrough.playing"
         }
       ]
     },
@@ -152,6 +168,11 @@
           "command": "walkmethrough.close",
           "when": "view == walkmethrough.panel && walkmethrough.playing",
           "group": "navigation@3"
+        },
+        {
+          "command": "walkmethrough.refreshCoverage",
+          "when": "view == walkmethrough.coverage",
+          "group": "navigation"
         }
       ],
       "comments/commentThread/title": [
@@ -257,6 +278,15 @@
           "light": "#2f6db3",
           "highContrast": "#6fb0ff"
         }
+      },
+      {
+        "id": "walkmethrough.uncoveredGutter",
+        "description": "Marker on changed lines that no walkthrough step covers.",
+        "defaults": {
+          "dark": "#d18616",
+          "light": "#b5700a",
+          "highContrast": "#ffa344"
+        }
       }
     ],
     "yamlValidation": [
@@ -279,13 +309,13 @@
     ]
   },
   "scripts": {
-    "copy-schema": "node -e \"require('fs').cpSync('../schema','schema',{recursive:true})\"",
-    "build": "npm run copy-schema && esbuild src/extension.ts --bundle --platform=node --format=cjs --target=node18 --external:vscode --outfile=dist/extension.js --sourcemap",
+    "build": "npm run copy-assets && esbuild src/extension.ts --bundle --platform=node --format=cjs --target=node18 --external:vscode --outfile=dist/extension.js --sourcemap",
     "typecheck": "tsc -p . --noEmit",
     "pretest": "tsc -p tsconfig.test.json",
     "test": "node --test \"out-test/test/*.test.js\"",
-    "package": "npm run build && vsce package --no-dependencies",
-    "test:integration": "npm run build && tsc -p tsconfig.test.json && node out-test/test-integration/run.js"
+    "package": "npm run build -- --minify && vsce package --no-dependencies",
+    "test:integration": "npm run build && tsc -p tsconfig.test.json && node out-test/test-integration/run.js",
+    "copy-assets": "node -e \"const fs=require('fs');fs.cpSync('../schema','schema',{recursive:true});fs.copyFileSync('../LICENSE','LICENSE')\""
   },
   "dependencies": {
     "markdown-it": "^14.1.0",
@@ -296,6 +326,7 @@
     "@types/node": "^20.14.0",
     "@types/vscode": "~1.90.0",
     "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^4.0.0",
     "esbuild": "^0.24.0",
     "typescript": "^5.6.0"
   }

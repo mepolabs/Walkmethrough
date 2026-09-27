@@ -1,0 +1,27 @@
+{
+  "name": "walkmethrough",
+  "description": "Agent-written code walkthroughs you review step by step in VS Code.",
+  "owner": {
+    "name": "Mepolabs",
+    "url": "https://github.com/mepolabs"
+  },
+  "plugins": [
+    {
+      "name": "walkmethrough",
+      "source": "./",
+      "description": "The walkthrough skill: at the end of a session Claude writes .walkthrough/<session>.yaml (the changed code in execution order), and applies review feedback from the Walkmethrough VS Code extension.",
+      "version": "0.1.0",
+      "author": { "name": "Mepolabs" },
+      "homepage": "https://github.com/mepolabs/walkmethrough",
+      "repository": "https://github.com/mepolabs/walkmethrough",
+      "license": "MIT",
+      "keywords": ["walkthrough", "code-review", "skill"],
+      "skills": ["./skills/walkthrough"]
+    },
+    {
+      "name": "walkmethrough-stop-hook",
+      "source": "./plugins/walkmethrough-stop-hook",
+      "description": "Optional: makes Claude write a walkthrough before it finishes any session that changed code. Best installed per project."
+    }
+  ]
+}

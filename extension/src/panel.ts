@@ -2,6 +2,7 @@
 import * as vscode from "vscode";
 import { renderMarkdown, stepFromHref } from "./core/markdown";
 import { Player } from "./player";
+import { CoverageCheck } from "./coverageView";
 import { ReviewComments } from "./review";
 
 export const STATUS_NOTE: Record<string, string | undefined> = {
@@ -29,8 +30,13 @@ export class Panel implements vscode.WebviewViewProvider, vscode.Disposable {
   constructor(
     private readonly player: Player,
     private readonly review: ReviewComments,
+    private readonly coverage: CoverageCheck,
   ) {
-    this.subscriptions = [player.onDidChange(() => this.render()), review.onDidChange(() => this.render())];
+    this.subscriptions = [
+      player.onDidChange(() => this.render()),
+      review.onDidChange(() => this.render()),
+      coverage.onDidChange(() => this.render()),
+    ];
   }
 
   resolveWebviewView(view: vscode.WebviewView): void {
@@ -44,6 +50,7 @@ export class Panel implements vscode.WebviewViewProvider, vscode.Disposable {
       else if (msg.type === "reveal") void this.player.goto(this.player.active?.position ?? 0);
       else if (msg.type === "comment") this.review.commentOnStep();
       else if (msg.type === "copy") void this.review.copyToChat();
+      else if (msg.type === "coverage") void vscode.commands.executeCommand(`${CoverageCheck.viewId}.focus`);
     });
     this.render();
   }
@@ -119,6 +126,7 @@ export class Panel implements vscode.WebviewViewProvider, vscode.Disposable {
       return `<div class="meta">Overview · ${session.stepCount} steps</div>
 <h2>${escape(wt.title)}</h2>
 <div class="md">${wt.summary ? renderMarkdown(wt.summary) : ""}</div>
+${this.coverageLine()}
 ${copy ? `<div class="actions">${copy}</div>` : ""}
 ${nav}`;
     }
@@ -141,5 +149,14 @@ ${note}
 <div class="md">${renderMarkdown(step.why)}</div>
 <div class="actions">${view.kind === "step" ? `<a data-msg="comment">Comment on this step</a>` : ""}${copy}</div>
 ${nav}`;
+  }
+
+  private coverageLine(): string {
+    const summary = this.coverage.summary;
+    if (!summary) return "";
+    const s = this.coverage.current;
+    const missing = s.kind === "done" ? s.coverage.changed - s.coverage.covered + s.coverage.deleted.length : 0;
+    const link = missing > 0 ? ` · <a data-msg="coverage">show what's missing</a>` : "";
+    return `<p class="meta">${escape(summary)}${link}</p>`;
   }
 }
