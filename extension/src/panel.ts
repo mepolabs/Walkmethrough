@@ -1,9 +1,7 @@
 // The "Walkthrough" sidebar view: explanation, position and Back / Next.
 import * as vscode from "vscode";
-import MarkdownIt from "markdown-it";
+import { renderMarkdown, stepFromHref } from "./core/markdown";
 import { Player } from "./player";
-
-const md = new MarkdownIt({ html: false, linkify: true });
 
 const STATUS_NOTE: Record<string, string | undefined> = {
   moved: "The code moved since this walkthrough was written; the highlight follows its anchor.",
@@ -34,8 +32,9 @@ export class Panel implements vscode.WebviewViewProvider, vscode.Disposable {
   resolveWebviewView(view: vscode.WebviewView): void {
     this.view = view;
     view.webview.options = { enableScripts: true, enableCommandUris: false };
-    view.webview.onDidReceiveMessage((msg: { type: string }) => {
-      if (msg.type === "next") void this.player.next();
+    view.webview.onDidReceiveMessage((msg: { type: string; href?: string }) => {
+      if (msg.type === "link" && msg.href) this.followLink(msg.href);
+      else if (msg.type === "next") void this.player.next();
       else if (msg.type === "back") void this.player.back();
       else if (msg.type === "open") void vscode.commands.executeCommand("walkmethrough.open");
       else if (msg.type === "reveal") void this.player.goto(this.player.active?.position ?? 0);
@@ -45,6 +44,13 @@ export class Panel implements vscode.WebviewViewProvider, vscode.Disposable {
 
   dispose(): void {
     this.subscription.dispose();
+  }
+
+  /** Links reach here only if the renderer allowed them: step links or http(s). */
+  private followLink(href: string): void {
+    const step = stepFromHref(href);
+    if (step !== undefined) void this.player.goto(step);
+    else if (/^https?:\/\//i.test(href)) void vscode.env.openExternal(vscode.Uri.parse(href));
   }
 
   private render(): void {
@@ -73,6 +79,11 @@ export class Panel implements vscode.WebviewViewProvider, vscode.Disposable {
   const vscode = acquireVsCodeApi();
   document.querySelectorAll("[data-msg]").forEach((el) =>
     el.addEventListener("click", () => vscode.postMessage({ type: el.dataset.msg })));
+  document.querySelectorAll(".md a[href]").forEach((el) =>
+    el.addEventListener("click", (e) => {
+      e.preventDefault();
+      vscode.postMessage({ type: "link", href: el.getAttribute("href") });
+    }));
 </script>
 </body></html>`;
   }
@@ -95,7 +106,7 @@ export class Panel implements vscode.WebviewViewProvider, vscode.Disposable {
     if (!step) {
       return `<div class="meta">Overview · ${session.stepCount} steps</div>
 <h2>${escape(wt.title)}</h2>
-${wt.summary ? md.render(wt.summary) : ""}
+<div class="md">${wt.summary ? renderMarkdown(wt.summary) : ""}</div>
 ${nav}`;
     }
 
@@ -114,7 +125,7 @@ ${nav}`;
 <h2>${escape(step.title)}</h2>
 <a class="loc" data-msg="reveal" title="Show in editor">${location}</a>
 ${note}
-${md.render(step.why)}
+<div class="md">${renderMarkdown(step.why)}</div>
 ${nav}`;
   }
 }

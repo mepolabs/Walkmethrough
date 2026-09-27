@@ -44,12 +44,14 @@ generate a "Changes Tour" over MCP. Walkmethrough adds:
 
 | # | Decision | Rationale |
 |---|----------|-----------|
-| D1 | v1 reads only its own YAML schema; no CodeTour `.tour` import/export. | Resolves the plan's open decision in line with its own "out of scope for v1" list. The schema is small enough that a `.tour` converter can be added later without changing it. |
+| D1 | v1 reads only its own YAML schema; no CodeTour `.tour` import/export. | Resolves the plan's open decision in line with its own "out of scope for v1" list. The schema is small enough that a `.tour` converter can be added later without changing it. The useful ideas in `.tour` are adopted into the YAML schema instead (§10). |
 | D2 | YAML, not JSON, for both files. | Agents write multi-line prose (`why`) more reliably in YAML block scalars; humans can read and hand-edit it. |
 | D3 | Files carry `version: 1`. | One extra field buys forward compatibility; the player refuses unknown major versions with a clear message. |
 | D4 | Line numbers are 1-based and inclusive. | Matches what editors, `git diff` and agents show. |
 | D5 | The extension never rewrites a walkthrough file. | The file is the agent's claim; reviewer state (position, comments) lives elsewhere. |
 | D6 | Feedback entries reference steps by 1-based index **and** carry `file`/`lines`. | The index gives context; file and lines make the entry actionable even if the walkthrough is regenerated. |
+| D7 | Walkthrough text is untrusted input. | It is written by an agent and can arrive in a pull request. The player never runs anything a walkthrough says to (no command links, scripts, `when` conditions) and renders Markdown through an allowlist (§5.2.2). |
+| D8 | Commit SHAs are read from the YAML source text. | Unquoted, YAML turns `0123456` into `123456` and `12e4567` into a float. The skill also asks agents to quote them. |
 
 ## 4. File formats
 
@@ -68,7 +70,8 @@ this section explains them.
 | `version` | file | yes | `1` | Schema version (D3). |
 | `title` | file | yes | string | What the session built. |
 | `summary` | file | no | string (Markdown) | Architecture explanation shown before step 1. |
-| `base_commit` | file | no | string (commit SHA) | Commit the walkthrough was written against; the coverage check diffs against it. |
+| `base_commit` | file | no | string (commit SHA) | Commit the changes start from; the coverage check diffs against it. |
+| `head_commit` | file | no | string (commit SHA) | Commit whose contents the steps describe. Set only when every described change is committed; omitted for uncommitted work. Lets the player show a step "as written" when the working tree has drifted (§5.2.1). |
 | `steps` | file | yes | list, ≥1 | Steps in execution order. |
 | `file` | step | yes | string | Path relative to the repo root. |
 | `lines` | step | yes | `[start, end]` integers, `1 ≤ start ≤ end` | Lines the step covers. |
@@ -77,7 +80,11 @@ this section explains them.
 | `why` | step | yes | string (Markdown) | What the code does and why the agent wrote it this way. |
 
 Unknown fields are ignored with a warning (not an error), so newer agents can
-add fields without breaking older players.
+add fields without breaking older players. More than 15 steps is also a
+warning: long walkthroughs cost tokens to write and attention to review.
+
+In `summary` and `why`, `[#3]` or `[label][#3]` links to step 3 (CodeTour's
+step-reference syntax). Only `https://` links are rendered as links (§5.2.2).
 
 Example:
 
@@ -87,7 +94,7 @@ title: Cancel an order
 summary: |
   `POST /orders/:id/cancel` goes controller → service → repository.
   The service owns the business rule (only `pending` orders can be cancelled).
-base_commit: 3f2c1a9
+base_commit: "3f2c1a9"
 steps:
   - title: Route and controller
     file: src/orders/controller.ts
@@ -135,9 +142,10 @@ The agent flips `status` to `applied` after acting on an entry; it never deletes
 - **Write mode**: run `git diff <base>` (base = `HEAD` at session start, or the
   merge-base with the default branch), group hunks into logical units, order
   them by execution flow, and write `.walkthrough/<session>.yaml` per §4.1.
-  Rules: one step per logical unit, not per line; `why` is 1–4 sentences;
-  `anchor` is copied verbatim from the file; every changed hunk should be in
-  some step (the coverage check will flag gaps).
+  Rules: one step per logical unit, not per line, at most 15 steps; `why` is
+  1–4 sentences; `anchor` is copied verbatim from the file; every changed hunk
+  should be in some step (the coverage check will flag gaps); SHAs are quoted;
+  `head_commit` is set only when the described changes are all committed.
 - **Apply mode**: read `.walkthrough/feedback.yaml`, act on every `status: open`
   entry, set each to `applied`, and summarise what changed.
 - Installation: `.agents/skills/walkthrough/` (Codex, Copilot, Cursor) and a copy
@@ -176,6 +184,11 @@ Engine: VS Code `^1.90`; also published to Open VSX so Cursor can install it.
   YAML path (e.g. `steps[2].lines: end (4) is before start (9)`).
 - The file watcher reloads the walkthrough if it changes on disk, keeping the
   current step index when it still exists.
+- *(Planned, from CodeTour)* The player remembers per walkthrough which steps
+  the reviewer has seen and the last position (VS Code `workspaceState`, keyed by
+  file name and content hash). Seen steps get a check mark in **Go to Step…**, and
+  reopening a walkthrough offers to resume. This is reviewer state, so it never
+  goes into the YAML (D5).
 
 #### 5.2.1 Anchor relocation
 
@@ -193,6 +206,24 @@ Given a step `(file, [start, end], anchor)` and the current file text:
    the first line must end the file line, the last must start it, inner lines match whole.)
 5. No match → keep `[start, end]` clamped to the file, status `stale`, and warn.
 6. File missing → status `missing`; the panel says so and Next/Back still work.
+7. *(Planned, from CodeTour's `ref`)* When the status is `stale` or `missing`
+   and `head_commit` is set, the panel offers **Show as written**: it opens the
+   file read-only at `head_commit` (the built-in Git extension's `toGitUri`) with
+   the recorded `[start, end]`, which are exact there by definition.
+
+#### 5.2.2 Rendering untrusted text
+
+`summary` and `why` go through one renderer (`src/core/markdown.ts`), which is
+unit-tested:
+
+- Raw HTML is escaped, and images are not rendered.
+- Links are kept only for `http(s)://` and step references (`#step-N`). Every
+  other scheme (`command:`, `vscode:`, `file:`, `javascript:`, relative paths)
+  is rendered as plain text.
+- The webview has a nonce-only Content Security Policy and command URIs
+  disabled. Link clicks are handled by the extension: a step link calls
+  `goto`, and an http(s) link opens through `vscode.env.openExternal`, which
+  asks the user to confirm.
 
 ### 5.3 Comments and feedback (roadmap step 4)
 
@@ -208,8 +239,9 @@ Given a step `(file, [start, end], anchor)` and the current file text:
 
 ### 5.4 Coverage check (roadmap step 5)
 
-- Runs `git diff --unified=0 <base_commit>` (falls back to `HEAD` if absent) in
-  the workspace, and collects added/modified line ranges per file.
+- Runs `git diff --unified=0 <base_commit> <head_commit>` when both are set,
+  otherwise `git diff --unified=0 <base_commit>` against the working tree
+  (`HEAD` if `base_commit` is absent), and collects added/modified line ranges per file.
 - A changed line is *covered* if it falls in some step's resolved range.
 - Uncovered ranges are shown in a **Not in walkthrough** tree and as a subtle
   gutter marker; the overview shows `covered / changed` lines.
@@ -245,7 +277,7 @@ extension/                   VS Code extension (TypeScript)
 |---|------|--------|
 | 1 | **Schema** — freeze v1 fields, two hand-made examples | done |
 | 2 | **Skill** — SKILL.md; test on real sessions in Claude Code and Codex | written; real-session testing pending |
-| 3 | **Player** — load YAML, highlight, Next/Back, explanation panel | done (first cut); unit-tested, VS Code integration test written but not yet run |
+| 3 | **Player** — load YAML, highlight, Next/Back, explanation panel | done (first cut); unit-tested, VS Code integration test written but not yet run. Planned: seen-step progress, **Show as written** |
 | 4 | **Comments** — native threads → `feedback.yaml`, copy-to-chat | not started |
 | 5 | **Coverage check** — diff vs `base_commit`, show uncovered lines | not started |
 | 6 | **Ship** — Marketplace + Open VSX; installer placing the skill per harness | not started |
@@ -257,3 +289,41 @@ extension/                   VS Code extension (TypeScript)
 - Tours across several sessions or PRs.
 - A web viewer for reviewing outside VS Code.
 - Importing or exporting CodeTour `.tour` files.
+
+## 10. Lessons from CodeTour
+
+Reviewed on 2026-09-27: [microsoft/codetour](https://github.com/microsoft/codetour)
+(the `.tour` schema, player and README) and the
+[community fork](https://github.com/maurice30120/codetour) (its MCP "Changes
+Tour" generator and design records). The format stays YAML (D1); what follows
+is what we took, what we deferred, and what we left out.
+
+**Adopted**
+
+| From | Idea | Where |
+|------|------|-------|
+| CodeTour `ref`, fork ADR 0004 | Pin a walkthrough to the commit it describes, but only when the changes are committed. For uncommitted work, record no commit, since that state can't be reproduced. | `head_commit` (§4.1), **Show as written** (§5.2.1) |
+| Fork ADR 0003 | Generated tours are untrusted: no command links, `when` expressions or external URIs; only safe Markdown. | D7, §5.2.2 |
+| Fork result codes | Report every validation problem in one pass, each with its field path; keep hard errors apart from warnings. | Parser (already did this); step-limit warning added |
+| Fork `STEP_LIMIT_EXCEEDED` | Warn above 15 steps. | Parser, skill |
+| CodeTour step references | `[#3]` and `[label][#3]` in descriptions link to another step. | §4.1, renderer |
+| CodeTour progress | Remember which steps were seen, and resume where you left off. | §5.2 (planned) |
+
+**Deferred (v2 candidates)**
+
+| From | Idea | Why not yet |
+|------|------|-------------|
+| Fork ADR 0007 | Mermaid diagrams in `summary`, rendered and validated locally. | Useful for the architecture summary, but it adds a large dependency and needs its own sanitisation rules. |
+| CodeTour Watch (CI) | Fail CI when a tour drifts from the code. | Our anchor logic is pure, so a `walkmethrough check` CLI is cheap later. Walkthroughs are per-session review aids, not long-lived docs, so drift matters less. |
+| CodeTour tour markers | Gutter icon on lines that belong to a step, even when no walkthrough is playing. | Overlaps the coverage-check gutter (§5.4); decide after that ships. |
+| CodeTour content steps | Steps with no file, e.g. "what I deliberately didn't change". | `summary` covers the intro case. Revisit if agents need to explain deletions or non-changes; `base_commit` could show deleted code the same way `head_commit` shows drifted code. |
+
+**Rejected**
+
+| From | Idea | Why |
+|------|------|-----|
+| CodeTour `pattern` (regex) | Locate a step by regular expression. | Agents write regexes poorly, and a bad regex fails silently. A literal first-line `anchor` is easier to write correctly and to check. |
+| CodeTour `line` / `selection` with columns | Point at one line or a character span. | A reviewer reads whole logical units, so a line range is the right grain. |
+| CodeTour `commands`, `when`, `>>` shell links, "Insert Code" | Interactive-tutorial features. | They run things, which D7 rules out. They also don't help anyone review a diff. |
+| Fork ADR 0002 | One fixed output file, replaced on each generation. | We keep one file per session so several sessions can be reviewed, and so `feedback.yaml` entries can name the walkthrough they came from. |
+| CodeTour `nextTour`, `isPrimary` | Linking tours and choosing a primary one. | Tours across sessions are out of scope (§9). |

@@ -32,7 +32,8 @@ title: <what this session built, one line>
 summary: |
   <2–5 sentences: the architecture of the change and how the pieces connect.
   Markdown is allowed. This is shown before step 1.>
-base_commit: <full or short SHA of <base>>
+base_commit: "<SHA of <base>>"      # quoted, so YAML keeps it a string
+head_commit: "<SHA of HEAD>"         # only if all described changes are committed
 steps:
   - title: <one-line name of the step>
     file: <path relative to repo root, forward slashes>
@@ -52,7 +53,10 @@ Rules:
   start at a distinctive line — a signature, a route string — not `}` or `return x;`.
 - Every changed hunk should fall inside some step. The reviewer's extension flags
   changed lines that no step covers.
-- Keep it short. The code is on screen; `why` explains intent, not syntax.
+- Keep it short: at most 15 steps. The code is on screen; `why` explains intent,
+  not syntax.
+- Refer to another step with `[#3]` or `[label][#3]`; the viewer turns these into links.
+  Only `https://` links are shown as links; don't use `command:`, `file:` or HTML.
 - Be honest: if something is a workaround, untested, or a guess, say so in `why`.
 
 When done, tell the user the file path and that they can open it with

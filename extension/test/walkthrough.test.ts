@@ -84,11 +84,28 @@ test("warns on unknown fields but still parses", () => {
   assert.deepEqual(r.warnings, ["extra: unknown field, ignored"]);
 });
 
-test("validates base_commit as a SHA", () => {
-  assert.deepEqual(parseWalkthrough(minimal + "base_commit: 3f2c1a9\n").errors, []);
+test("validates base_commit and head_commit as SHAs", () => {
+  assert.deepEqual(parseWalkthrough(minimal + "base_commit: 3f2c1a9\nhead_commit: 9a8b7c6\n").errors, []);
   assert.deepEqual(parseWalkthrough(minimal + "base_commit: main\n").errors, [
     'base_commit: "main" is not a commit SHA',
   ]);
+  assert.deepEqual(parseWalkthrough(minimal + "head_commit: [1]\n").errors, [
+    "head_commit: [1] is not a commit SHA",
+  ]);
+});
+
+test("keeps SHAs that YAML would read as numbers", () => {
+  const r = parseWalkthrough(minimal + "base_commit: 0123456\nhead_commit: 12e4567\n");
+  assert.deepEqual(r.errors, []);
+  assert.equal(r.walkthrough?.base_commit, "0123456");
+  assert.equal(r.walkthrough?.head_commit, "12e4567");
+});
+
+test("warns when a walkthrough has more than 15 steps", () => {
+  const step = "  - title: S\n    file: a.ts\n    lines: [1, 2]\n    why: w\n";
+  const r = parseWalkthrough("version: 1\ntitle: T\nsteps:\n" + step.repeat(16));
+  assert.ok(r.walkthrough);
+  assert.deepEqual(r.warnings, ["steps: 16 steps; keep walkthroughs to 15 or fewer"]);
 });
 
 test("normalises paths", () => {

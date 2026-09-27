@@ -1,7 +1,10 @@
 // Parsing and validation of walkthrough files (spec §4.1). No `vscode` import.
-import { parseDocument } from "yaml";
+import { Document, isScalar, parseDocument } from "yaml";
 
 export const SUPPORTED_VERSION = 1;
+
+/** Above this many steps the parser warns: long walkthroughs cost tokens and reviewer attention. */
+export const STEP_LIMIT = 15;
 
 export interface Step {
   title: string;
@@ -16,7 +19,10 @@ export interface Walkthrough {
   version: 1;
   title: string;
   summary?: string;
+  /** Commit the walkthrough was written against (the diff's starting point). */
   base_commit?: string;
+  /** Commit whose contents the steps describe; absent when the changes were uncommitted. */
+  head_commit?: string;
   steps: Step[];
 }
 
@@ -28,7 +34,7 @@ export interface ParseResult {
   warnings: string[];
 }
 
-const FILE_FIELDS = new Set(["version", "title", "summary", "base_commit", "steps"]);
+const FILE_FIELDS = new Set(["version", "title", "summary", "base_commit", "head_commit", "steps"]);
 const STEP_FIELDS = new Set(["title", "file", "lines", "anchor", "why"]);
 
 type Obj = Record<string, unknown>;
@@ -57,6 +63,21 @@ function checkUnknown(obj: Obj, known: Set<string>, path: string, warnings: stri
   }
 }
 
+/**
+ * Reads a commit SHA as written. YAML would turn an unquoted `0123456` into the
+ * number 123456 and `12e4567` into a float, so use the scalar's source text.
+ */
+function readCommit(doc: Document, key: string, errors: string[]): string | undefined {
+  const node = doc.get(key, true);
+  if (node === undefined) return undefined;
+  const text = isScalar(node) ? String(node.source ?? node.value) : "";
+  if (!/^[0-9a-fA-F]{4,40}$/.test(text)) {
+    errors.push(`${key}: ${JSON.stringify(text || doc.toJS()[key])} is not a commit SHA`);
+    return undefined;
+  }
+  return text;
+}
+
 /** Normalises a user-written path to forward slashes with no leading "./" or "/". */
 export function normalisePath(p: string): string {
   return p.replace(/\\/g, "/").replace(/^(\.\/)+/, "").replace(/^\/+/, "");
@@ -81,15 +102,16 @@ export function parseWalkthrough(text: string): ParseResult {
   }
   if (!isNonEmptyString(data.title)) errors.push("title: required, non-empty string");
   if (data.summary !== undefined && typeof data.summary !== "string") errors.push("summary: must be a string");
-  if (data.base_commit !== undefined) {
-    const bc = String(data.base_commit);
-    if (!/^[0-9a-fA-F]{4,40}$/.test(bc)) errors.push(`base_commit: "${bc}" is not a commit SHA`);
-  }
+  const base_commit = readCommit(doc, "base_commit", errors);
+  const head_commit = readCommit(doc, "head_commit", errors);
 
   const steps: Step[] = [];
   if (!Array.isArray(data.steps) || data.steps.length === 0) {
     errors.push("steps: required, at least one step");
   } else {
+    if (data.steps.length > STEP_LIMIT) {
+      warnings.push(`steps: ${data.steps.length} steps; keep walkthroughs to ${STEP_LIMIT} or fewer`);
+    }
     data.steps.forEach((raw: unknown, i: number) => {
       const p = `steps[${i}]`;
       if (!isObject(raw)) {
@@ -127,7 +149,8 @@ export function parseWalkthrough(text: string): ParseResult {
       version: 1,
       title: (data.title as string).trim(),
       summary: data.summary as string | undefined,
-      base_commit: data.base_commit === undefined ? undefined : String(data.base_commit),
+      base_commit,
+      head_commit,
       steps,
     },
     errors,

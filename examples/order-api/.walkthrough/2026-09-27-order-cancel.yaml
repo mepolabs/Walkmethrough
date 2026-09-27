@@ -21,7 +21,7 @@ steps:
     anchor: "export class OrderNotFound extends Error {}"
     why: |
       Two error classes let the controller branch with `instanceof` instead of
-      matching on message strings.
+      matching on message strings. They are thrown in [the cancellation rule][#3].
   - title: Cancellation rule
     file: src/orders/service.ts
     lines: [25, 32]
