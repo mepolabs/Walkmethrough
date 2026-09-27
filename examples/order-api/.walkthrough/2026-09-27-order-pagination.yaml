@@ -1,0 +1,40 @@
+version: 1
+title: Paginate the order list
+summary: |
+  `GET /orders` now takes `page` and `pageSize` query parameters and returns
+  `{ items, page, pageSize, total }`. Counting and fetching run in parallel.
+steps:
+  - title: Parse and clamp query parameters
+    file: src/orders/controller.ts
+    lines: [7, 12]
+    anchor: 'router.get("/orders", async (req: Request, res: Response) => {'
+    why: |
+      `page` is at least 1 and `pageSize` is clamped to 1–100 so a client cannot
+      request the whole table in one call. Non-numeric input becomes `NaN`, which
+      `Math.max` turns back into the lower bound.
+  - title: Page envelope type
+    file: src/orders/service.ts
+    lines: [6, 11]
+    anchor: "export interface Page<T> {"
+    why: |
+      A generic envelope so other list endpoints can reuse the same response shape.
+  - title: Offset calculation and parallel queries
+    file: src/orders/service.ts
+    lines: [16, 23]
+    anchor: "async list(opts: { page: number; pageSize: number }): Promise<Page<Order>> {"
+    why: |
+      Converts the 1-based page into an offset and runs the page query and the count
+      concurrently with `Promise.all`, since neither depends on the other.
+  - title: Stable ordering for the page query
+    file: src/orders/repository.ts
+    lines: [20, 26]
+    anchor: "async findPage(offset: number, limit: number): Promise<Order[]> {"
+    why: |
+      Ordering by `created_at` alone is not stable when two orders share a timestamp,
+      so `id` is added as a tie-breaker; otherwise rows could repeat or vanish between pages.
+  - title: Total count
+    file: src/orders/repository.ts
+    lines: [28, 31]
+    anchor: "async count(): Promise<number> {"
+    why: |
+      `count(*)::int` casts Postgres's `bigint` so `pg` returns a JS number, not a string.

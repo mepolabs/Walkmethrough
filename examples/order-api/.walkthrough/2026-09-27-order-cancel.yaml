@@ -1,0 +1,44 @@
+version: 1
+title: Cancel a pending order
+summary: |
+  Adds `POST /orders/:id/cancel`. The request flows **controller → service → repository**:
+
+  - the controller parses the request and maps domain errors to HTTP status codes;
+  - the service owns the business rule (only `pending` orders can be cancelled);
+  - the repository runs a single `UPDATE … RETURNING *` so the response reflects what was stored.
+steps:
+  - title: Route and error mapping
+    file: src/orders/controller.ts
+    lines: [14, 23]
+    anchor: 'router.post("/orders/:id/cancel"'
+    why: |
+      New route. The controller stays thin: it passes the id and optional `reason`
+      to the service and translates `OrderNotFound` → 404 and `InvalidOrderState` → 409.
+      Anything else is re-thrown so the global error handler logs it as a 500.
+  - title: Domain errors
+    file: src/orders/service.ts
+    lines: [3, 4]
+    anchor: "export class OrderNotFound extends Error {}"
+    why: |
+      Two error classes let the controller branch with `instanceof` instead of
+      matching on message strings.
+  - title: Cancellation rule
+    file: src/orders/service.ts
+    lines: [25, 32]
+    anchor: "async cancel(id: string, reason?: string)"
+    why: |
+      Loads the order, rejects unknown ids, and only allows the `pending → cancelled`
+      transition. Paid or shipped orders need a refund flow, which is out of scope here.
+  - title: Persisting the status change
+    file: src/orders/repository.ts
+    lines: [33, 39]
+    anchor: "async updateStatus(id: string, status: OrderStatus"
+    why: |
+      One `UPDATE … RETURNING *` both writes and reads back the row, so there is no
+      second query and no race between them. `cancel_reason` is stored as `NULL` when absent.
+  - title: Mapping the new column
+    file: src/orders/repository.ts
+    lines: [42, 49]
+    anchor: "function toOrder(row: any): Order {"
+    why: |
+      `toOrder` now maps `cancel_reason` to `cancelReason` so API responses stay camelCase.

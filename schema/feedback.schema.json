@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mepolabs/walkmethrough/schema/feedback.schema.json",
+  "title": "Walkmethrough feedback file (v1)",
+  "type": "object",
+  "required": ["version", "entries"],
+  "properties": {
+    "version": { "const": 1 },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "walkthrough", "file", "lines", "comment", "status", "created"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "walkthrough": { "type": "string", "minLength": 1, "description": "File name of the walkthrough the comment was made in." },
+          "step": { "type": "integer", "minimum": 1, "description": "1-based step index." },
+          "file": { "type": "string", "minLength": 1 },
+          "lines": { "$ref": "walkthrough.schema.json#/$defs/lines" },
+          "comment": { "type": "string", "minLength": 1 },
+          "status": { "enum": ["open", "applied"] },
+          "created": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,9 @@
+src/**
+test/**
+out/**
+out-test/**
+node_modules/**
+**/*.map
+tsconfig*.json
+test-integration/**
+.vscode-test/**

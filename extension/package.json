@@ -1,0 +1,160 @@
+{
+  "name": "walkmethrough",
+  "displayName": "Walkmethrough",
+  "description": "Play back agent-written code walkthroughs step by step and send review comments back to the agent.",
+  "version": "0.1.0",
+  "publisher": "mepolabs",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mepolabs/walkmethrough"
+  },
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "walkthrough",
+    "code review",
+    "agent",
+    "tour",
+    "claude",
+    "codex",
+    "copilot",
+    "cursor"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "workspaceContains:.walkthrough/*.{yaml,yml}"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "walkmethrough.open",
+        "title": "Open\u2026",
+        "category": "Walkthrough",
+        "icon": "$(book)"
+      },
+      {
+        "command": "walkmethrough.next",
+        "title": "Next Step",
+        "category": "Walkthrough",
+        "icon": "$(arrow-right)",
+        "enablement": "walkmethrough.playing"
+      },
+      {
+        "command": "walkmethrough.back",
+        "title": "Previous Step",
+        "category": "Walkthrough",
+        "icon": "$(arrow-left)",
+        "enablement": "walkmethrough.playing"
+      },
+      {
+        "command": "walkmethrough.goto",
+        "title": "Go to Step\u2026",
+        "category": "Walkthrough",
+        "enablement": "walkmethrough.playing"
+      },
+      {
+        "command": "walkmethrough.close",
+        "title": "Close",
+        "category": "Walkthrough",
+        "icon": "$(close)",
+        "enablement": "walkmethrough.playing"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "walkmethrough.next",
+        "key": "alt+]",
+        "when": "walkmethrough.playing"
+      },
+      {
+        "command": "walkmethrough.back",
+        "key": "alt+[",
+        "when": "walkmethrough.playing"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "type": "webview",
+          "id": "walkmethrough.panel",
+          "name": "Walkthrough"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "walkmethrough.open",
+          "when": "view == walkmethrough.panel",
+          "group": "navigation@1"
+        },
+        {
+          "command": "walkmethrough.close",
+          "when": "view == walkmethrough.panel && walkmethrough.playing",
+          "group": "navigation@2"
+        }
+      ]
+    },
+    "colors": [
+      {
+        "id": "walkmethrough.stepHighlight",
+        "description": "Background of the lines covered by the current walkthrough step.",
+        "defaults": {
+          "dark": "#3a6ea522",
+          "light": "#3a6ea518",
+          "highContrast": "#3a6ea533"
+        }
+      },
+      {
+        "id": "walkmethrough.stepGutter",
+        "description": "Gutter bar marking the lines of the current walkthrough step.",
+        "defaults": {
+          "dark": "#4f8fd6",
+          "light": "#2f6db3",
+          "highContrast": "#6fb0ff"
+        }
+      }
+    ],
+    "yamlValidation": [
+      {
+        "fileMatch": [
+          ".walkthrough/feedback.yaml"
+        ],
+        "url": "./schema/feedback.schema.json"
+      },
+      {
+        "fileMatch": [
+          ".walkthrough/*.yaml",
+          "!.walkthrough/feedback.yaml"
+        ],
+        "url": "./schema/walkthrough.schema.json"
+      }
+    ]
+  },
+  "scripts": {
+    "copy-schema": "node -e \"require('fs').cpSync('../schema','schema',{recursive:true})\"",
+    "build": "npm run copy-schema && esbuild src/extension.ts --bundle --platform=node --format=cjs --target=node18 --external:vscode --outfile=dist/extension.js --sourcemap",
+    "typecheck": "tsc -p . --noEmit",
+    "pretest": "tsc -p tsconfig.test.json",
+    "test": "node --test \"out-test/test/*.test.js\"",
+    "package": "npm run build && vsce package --no-dependencies",
+    "test:integration": "npm run build && tsc -p tsconfig.test.json && node out-test/test-integration/run.js"
+  },
+  "dependencies": {
+    "markdown-it": "^14.1.0",
+    "yaml": "^2.5.0"
+  },
+  "devDependencies": {
+    "@types/markdown-it": "^14.1.2",
+    "@types/node": "^20.14.0",
+    "@types/vscode": "~1.90.0",
+    "@vscode/test-electron": "^2.5.2",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.6.0"
+  }
+}
