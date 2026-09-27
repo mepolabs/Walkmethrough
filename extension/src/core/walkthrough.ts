@@ -158,7 +158,12 @@ export function parseWalkthrough(text: string): ParseResult {
   };
 }
 
-/** True for files in `.walkthrough/` that are walkthroughs (not the feedback file). */
+/** True for files in `.walkthrough/` that are walkthroughs (not `<session>.feedback.yaml`). */
 export function isWalkthroughFileName(name: string): boolean {
-  return /\.ya?ml$/i.test(name) && !/^feedback\.ya?ml$/i.test(name);
+  return /\.ya?ml$/i.test(name) && !/\.feedback\.ya?ml$/i.test(name);
+}
+
+/** The feedback file that belongs to a walkthrough: `x.yaml` → `x.feedback.yaml` (spec §4.2). */
+export function feedbackFileName(walkthroughName: string): string {
+  return walkthroughName.replace(/\.(ya?ml)$/i, ".feedback.$1");
 }

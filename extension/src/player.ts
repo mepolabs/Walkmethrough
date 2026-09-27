@@ -11,6 +11,7 @@ export type StepView =
 
 export class Player implements vscode.Disposable {
   private session: Session | undefined;
+  private opened: vscode.Uri | undefined;
   private current: StepView = { kind: "overview" };
   private watcher: vscode.FileSystemWatcher | undefined;
   private readonly changed = new vscode.EventEmitter<void>();
@@ -32,6 +33,11 @@ export class Player implements vscode.Disposable {
     return this.session;
   }
 
+  /** The open walkthrough file. */
+  get file(): vscode.Uri | undefined {
+    return this.opened;
+  }
+
   get view(): StepView {
     return this.current;
   }
@@ -42,6 +48,7 @@ export class Player implements vscode.Disposable {
     if (!parsed) return false;
     this.close();
     this.session = new Session(parsed, vscode.workspace.asRelativePath(file, false));
+    this.opened = file;
     this.watch(file);
     await vscode.commands.executeCommand("setContext", "walkmethrough.playing", true);
     await this.show();
@@ -66,6 +73,7 @@ export class Player implements vscode.Disposable {
     this.watcher?.dispose();
     this.watcher = undefined;
     this.session = undefined;
+    this.opened = undefined;
     this.current = { kind: "overview" };
     for (const editor of vscode.window.visibleTextEditors) editor.setDecorations(this.highlight, []);
     void vscode.commands.executeCommand("setContext", "walkmethrough.playing", false);

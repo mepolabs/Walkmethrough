@@ -63,8 +63,58 @@
         "category": "Walkthrough",
         "icon": "$(close)",
         "enablement": "walkmethrough.playing"
+      },
+      {
+        "command": "walkmethrough.commentOnStep",
+        "title": "Comment on Step",
+        "category": "Walkthrough",
+        "icon": "$(comment)",
+        "enablement": "walkmethrough.playing"
+      },
+      {
+        "command": "walkmethrough.copyFeedback",
+        "title": "Copy Feedback to Chat",
+        "category": "Walkthrough",
+        "icon": "$(copy)",
+        "enablement": "walkmethrough.playing"
+      },
+      {
+        "command": "walkmethrough.comment.create",
+        "title": "Add Comment"
+      },
+      {
+        "command": "walkmethrough.comment.cancelDraft",
+        "title": "Cancel"
+      },
+      {
+        "command": "walkmethrough.comment.edit",
+        "title": "Edit",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "walkmethrough.comment.delete",
+        "title": "Delete",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "walkmethrough.comment.save",
+        "title": "Save"
+      },
+      {
+        "command": "walkmethrough.comment.cancelEdit",
+        "title": "Cancel"
       }
     ],
+    "configuration": {
+      "title": "Walkthrough",
+      "properties": {
+        "walkmethrough.inlineExplanation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show each step's explanation in the editor, right below the highlighted lines, as well as in the Walkthrough view."
+        }
+      }
+    },
     "keybindings": [
       {
         "command": "walkmethrough.next",
@@ -94,9 +144,98 @@
           "group": "navigation@1"
         },
         {
-          "command": "walkmethrough.close",
+          "command": "walkmethrough.copyFeedback",
           "when": "view == walkmethrough.panel && walkmethrough.playing",
           "group": "navigation@2"
+        },
+        {
+          "command": "walkmethrough.close",
+          "when": "view == walkmethrough.panel && walkmethrough.playing",
+          "group": "navigation@3"
+        }
+      ],
+      "comments/commentThread/title": [
+        {
+          "command": "walkmethrough.commentOnStep",
+          "when": "commentController == walkmethrough && commentThread == walkmethrough.step",
+          "group": "inline@0"
+        },
+        {
+          "command": "walkmethrough.back",
+          "when": "commentController == walkmethrough && commentThread == walkmethrough.step",
+          "group": "inline@1"
+        },
+        {
+          "command": "walkmethrough.next",
+          "when": "commentController == walkmethrough && commentThread == walkmethrough.step",
+          "group": "inline@2"
+        },
+        {
+          "command": "walkmethrough.close",
+          "when": "commentController == walkmethrough && commentThread == walkmethrough.step",
+          "group": "inline@3"
+        }
+      ],
+      "comments/commentThread/context": [
+        {
+          "command": "walkmethrough.comment.create",
+          "when": "commentController == walkmethrough && commentThreadIsEmpty",
+          "group": "inline@1"
+        },
+        {
+          "command": "walkmethrough.comment.cancelDraft",
+          "when": "commentController == walkmethrough && commentThreadIsEmpty",
+          "group": "inline@2"
+        }
+      ],
+      "comments/comment/title": [
+        {
+          "command": "walkmethrough.comment.edit",
+          "when": "commentController == walkmethrough && comment == walkmethrough.feedback",
+          "group": "inline@1"
+        },
+        {
+          "command": "walkmethrough.comment.delete",
+          "when": "commentController == walkmethrough && comment == walkmethrough.feedback",
+          "group": "inline@2"
+        }
+      ],
+      "comments/comment/context": [
+        {
+          "command": "walkmethrough.comment.save",
+          "when": "commentController == walkmethrough && comment == walkmethrough.feedback",
+          "group": "inline@1"
+        },
+        {
+          "command": "walkmethrough.comment.cancelEdit",
+          "when": "commentController == walkmethrough && comment == walkmethrough.feedback",
+          "group": "inline@2"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "walkmethrough.comment.create",
+          "when": "false"
+        },
+        {
+          "command": "walkmethrough.comment.cancelDraft",
+          "when": "false"
+        },
+        {
+          "command": "walkmethrough.comment.edit",
+          "when": "false"
+        },
+        {
+          "command": "walkmethrough.comment.delete",
+          "when": "false"
+        },
+        {
+          "command": "walkmethrough.comment.save",
+          "when": "false"
+        },
+        {
+          "command": "walkmethrough.comment.cancelEdit",
+          "when": "false"
         }
       ]
     },
@@ -123,14 +262,17 @@
     "yamlValidation": [
       {
         "fileMatch": [
-          ".walkthrough/feedback.yaml"
+          ".walkthrough/*.feedback.yaml",
+          ".walkthrough/*.feedback.yml"
         ],
         "url": "./schema/feedback.schema.json"
       },
       {
         "fileMatch": [
           ".walkthrough/*.yaml",
-          "!.walkthrough/feedback.yaml"
+          ".walkthrough/*.yml",
+          "!.walkthrough/*.feedback.yaml",
+          "!.walkthrough/*.feedback.yml"
         ],
         "url": "./schema/walkthrough.schema.json"
       }

@@ -62,7 +62,7 @@ function newestWalkthrough(cwd) {
   return Math.max(
     0,
     ...names
-      .filter((n) => /\.ya?ml$/.test(n) && !/^feedback\.ya?ml$/.test(n))
+      .filter((n) => /\.ya?ml$/.test(n) && !/\.feedback\.ya?ml$/.test(n))
       .map((n) => mtime(join(cwd, WALKTHROUGH_DIR, n))),
   );
 }

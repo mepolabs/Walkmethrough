@@ -1,13 +1,17 @@
 import * as vscode from "vscode";
 import { isWalkthroughFileName } from "./core/walkthrough";
+import { InlineStep } from "./inline";
 import { Panel } from "./panel";
 import { Player } from "./player";
+import { FeedbackComment, ReviewComments } from "./review";
 
 const WALKTHROUGH_DIR = ".walkthrough";
 
 /** Returned from `activate` so integration tests can inspect the player. */
 export interface Api {
   player: Player;
+  inline: InlineStep;
+  review: ReviewComments;
 }
 
 export function activate(context: vscode.ExtensionContext): Api | undefined {
@@ -15,7 +19,11 @@ export function activate(context: vscode.ExtensionContext): Api | undefined {
   if (!root) return undefined;
 
   const player = new Player(root);
-  const panel = new Panel(player);
+  // One controller for both the step explanation and review comments (spec §5.3).
+  const comments = vscode.comments.createCommentController("walkmethrough", "Walkthrough");
+  const inline = new InlineStep(comments, player);
+  const review = new ReviewComments(comments, player, root);
+  const panel = new Panel(player, review);
   const status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
   status.command = "walkmethrough.next";
   status.tooltip = "Walkthrough: next step";
@@ -30,15 +38,31 @@ export function activate(context: vscode.ExtensionContext): Api | undefined {
   context.subscriptions.push(
     player,
     panel,
+    inline,
+    review,
+    comments,
     status,
     vscode.window.registerWebviewViewProvider(Panel.id, panel),
     vscode.commands.registerCommand("walkmethrough.open", (uri?: vscode.Uri) => openCommand(root, player, uri)),
     vscode.commands.registerCommand("walkmethrough.next", () => player.next()),
     vscode.commands.registerCommand("walkmethrough.back", () => player.back()),
-    vscode.commands.registerCommand("walkmethrough.goto", () => gotoCommand(player)),
+    // Step links in the inline explanation pass the step number; the palette passes nothing.
+    vscode.commands.registerCommand("walkmethrough.goto", (position?: unknown) =>
+      typeof position === "number" ? player.goto(position) : gotoCommand(player),
+    ),
     vscode.commands.registerCommand("walkmethrough.close", () => player.close()),
+    vscode.commands.registerCommand("walkmethrough.commentOnStep", () => review.commentOnStep()),
+    vscode.commands.registerCommand("walkmethrough.copyFeedback", () => review.copyToChat()),
+    vscode.commands.registerCommand("walkmethrough.comment.create", (r: vscode.CommentReply) => review.create(r)),
+    vscode.commands.registerCommand("walkmethrough.comment.cancelDraft", (r: vscode.CommentReply) =>
+      review.cancelDraft(r),
+    ),
+    vscode.commands.registerCommand("walkmethrough.comment.edit", (c: FeedbackComment) => review.edit(c)),
+    vscode.commands.registerCommand("walkmethrough.comment.save", (c: FeedbackComment) => review.save(c)),
+    vscode.commands.registerCommand("walkmethrough.comment.cancelEdit", (c: FeedbackComment) => review.cancelEdit(c)),
+    vscode.commands.registerCommand("walkmethrough.comment.delete", (c: FeedbackComment) => review.delete(c)),
   );
-  return { player };
+  return { player, inline, review };
 }
 
 export function deactivate(): void {}

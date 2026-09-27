@@ -1,6 +1,6 @@
 ---
 name: walkthrough
-description: Write a step-by-step code walkthrough of the changes made in this session to .walkthrough/<session>.yaml, ordered by execution flow, so a reviewer can play it back in the Walkmethrough VS Code extension. Use at the end of any session that changed code, or when the user asks for a walkthrough. Also use when the user asks to apply walkthrough feedback or review comments from .walkthrough/feedback.yaml.
+description: Write a step-by-step code walkthrough of the changes made in this session to .walkthrough/<session>.yaml, ordered by execution flow, so a reviewer can play it back in the Walkmethrough VS Code extension. Use at the end of any session that changed code, or when the user asks for a walkthrough. Also use when the user asks to apply walkthrough feedback or review comments from .walkthrough/<session>.feedback.yaml.
 ---
 
 # Walkthrough
@@ -64,28 +64,37 @@ When done, tell the user the file path and that they can open it with
 
 ## Apply feedback
 
+Each walkthrough has its own feedback file next to it:
+`.walkthrough/2026-09-27-order-cancel.yaml` → `.walkthrough/2026-09-27-order-cancel.feedback.yaml`.
+
 When the user asks you to apply walkthrough feedback / review comments:
 
-1. Read `.walkthrough/feedback.yaml`:
+1. Pick the walkthrough. Use the one the user names (Copy to chat names it).
+   If they don't name one, use the newest walkthrough whose feedback file has
+   `status: open` entries, and tell the user which one you picked. Only read and
+   change that walkthrough's feedback file, never another one's.
+2. Read its `<session>.feedback.yaml`:
 
    ```yaml
    version: 1
    entries:
      - id: fb-...
-       walkthrough: 2026-09-27-order-cancel.yaml
        step: 3
        file: src/orders/service.ts
        lines: [28, 30]
+       anchor: 'if (order.status !== "pending") {'
        comment: <the reviewer's request>
        status: open
        created: 2026-09-27T14:15:02Z
    ```
 
-2. For each entry with `status: open`, in order: open `file` around `lines`
-   (lines may have drifted; use the walkthrough step's `anchor` to re-find them),
-   make the requested change, or explain why you did not.
-3. Set each handled entry's `status` to `applied`. Do not delete entries or
-   change other fields.
-4. If your changes were substantial, write a fresh walkthrough for them (a new
+3. For each entry with `status: open`, in order: open `file` around `lines`
+   (lines may have drifted; search for `anchor`, or the step's `anchor` in the
+   walkthrough, to re-find them), make the requested change, or explain why
+   you did not.
+4. Set each handled entry's `status` to `applied`. Change only that field: do
+   not delete entries, edit other fields, or rewrite the file wholesale (the
+   reviewer's VS Code may be adding comments to it at the same time).
+5. If your changes were substantial, write a fresh walkthrough for them (a new
    session file) as above.
-5. Reply with one line per entry: what you changed, or why you left it.
+6. Reply with one line per entry: what you changed, or why you left it.

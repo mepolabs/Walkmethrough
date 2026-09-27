@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { isWalkthroughFileName, normalisePath, parseWalkthrough } from "../src/core/walkthrough";
+import { feedbackFileName, isWalkthroughFileName, normalisePath, parseWalkthrough } from "../src/core/walkthrough";
 
 const EXAMPLE_DIR = join(__dirname, "..", "..", "..", "examples", "order-api");
 
@@ -116,8 +116,34 @@ test("normalises paths", () => {
 test("recognises walkthrough file names", () => {
   assert.ok(isWalkthroughFileName("2026-09-27-x.yaml"));
   assert.ok(isWalkthroughFileName("x.yml"));
-  assert.ok(!isWalkthroughFileName("feedback.yaml"));
+  assert.ok(!isWalkthroughFileName("2026-09-27-x.feedback.yaml"));
+  assert.ok(!isWalkthroughFileName("x.feedback.yml"));
   assert.ok(!isWalkthroughFileName("notes.md"));
+});
+
+test("example feedback files sit next to their walkthrough and their anchors resolve", async () => {
+  const { resolveRange } = await import("../src/core/anchor");
+  const { parse } = await import("yaml");
+  const dir = join(EXAMPLE_DIR, ".walkthrough");
+  const names = readdirSync(dir);
+  const feedback = names.filter((n) => /\.feedback\.ya?ml$/.test(n));
+  assert.ok(feedback.length > 0);
+  for (const name of feedback) {
+    assert.ok(
+      names.some((w) => isWalkthroughFileName(w) && feedbackFileName(w) === name),
+      `${name} has a walkthrough`,
+    );
+    for (const entry of parse(readFileSync(join(dir, name), "utf8")).entries) {
+      assert.equal(entry.walkthrough, undefined, "the file name says which walkthrough");
+      const text = readFileSync(join(EXAMPLE_DIR, entry.file), "utf8");
+      assert.equal(resolveRange(text, entry.lines, entry.anchor).status, "exact", entry.id);
+    }
+  }
+});
+
+test("names a walkthrough's feedback file", () => {
+  assert.equal(feedbackFileName("2026-09-27-x.yaml"), "2026-09-27-x.feedback.yaml");
+  assert.equal(feedbackFileName("x.yml"), "x.feedback.yml");
 });
 
 test("rejects paths that leave the repo", () => {

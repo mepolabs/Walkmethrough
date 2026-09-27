@@ -2,8 +2,9 @@
 import * as vscode from "vscode";
 import { renderMarkdown, stepFromHref } from "./core/markdown";
 import { Player } from "./player";
+import { ReviewComments } from "./review";
 
-const STATUS_NOTE: Record<string, string | undefined> = {
+export const STATUS_NOTE: Record<string, string | undefined> = {
   moved: "The code moved since this walkthrough was written; the highlight follows its anchor.",
   stale: "Couldn't find this step's anchor; the highlight shows the original lines and may be off.",
   unanchored: undefined,
@@ -23,10 +24,13 @@ function nonce(): string {
 export class Panel implements vscode.WebviewViewProvider, vscode.Disposable {
   static readonly id = "walkmethrough.panel";
   private view: vscode.WebviewView | undefined;
-  private readonly subscription: vscode.Disposable;
+  private readonly subscriptions: vscode.Disposable[];
 
-  constructor(private readonly player: Player) {
-    this.subscription = player.onDidChange(() => this.render());
+  constructor(
+    private readonly player: Player,
+    private readonly review: ReviewComments,
+  ) {
+    this.subscriptions = [player.onDidChange(() => this.render()), review.onDidChange(() => this.render())];
   }
 
   resolveWebviewView(view: vscode.WebviewView): void {
@@ -38,12 +42,14 @@ export class Panel implements vscode.WebviewViewProvider, vscode.Disposable {
       else if (msg.type === "back") void this.player.back();
       else if (msg.type === "open") void vscode.commands.executeCommand("walkmethrough.open");
       else if (msg.type === "reveal") void this.player.goto(this.player.active?.position ?? 0);
+      else if (msg.type === "comment") this.review.commentOnStep();
+      else if (msg.type === "copy") void this.review.copyToChat();
     });
     this.render();
   }
 
   dispose(): void {
-    this.subscription.dispose();
+    for (const s of this.subscriptions) s.dispose();
   }
 
   /** Links reach here only if the renderer allowed them: step links or http(s). */
@@ -69,6 +75,8 @@ export class Panel implements vscode.WebviewViewProvider, vscode.Disposable {
   a.loc { cursor: pointer; font-family: var(--vscode-editor-font-family); font-size: 0.9em; }
   .note { border-left: 3px solid var(--vscode-editorWarning-foreground); padding: 4px 8px; margin: 8px 0; background: var(--vscode-inputValidation-warningBackground); }
   .nav { display: flex; gap: 8px; margin-top: 14px; position: sticky; bottom: 0; padding: 8px 0; background: var(--vscode-sideBar-background); }
+  .actions { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 12px; }
+  .actions a { cursor: pointer; }
   button { flex: 1; padding: 5px 8px; border: none; border-radius: 2px; cursor: pointer; color: var(--vscode-button-foreground); background: var(--vscode-button-background); font: inherit; }
   button:hover { background: var(--vscode-button-hoverBackground); }
   button.secondary { color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); }
@@ -97,6 +105,10 @@ export class Panel implements vscode.WebviewViewProvider, vscode.Disposable {
     }
 
     const wt = session.walkthrough;
+    const count = this.review.open.length;
+    const copy = count
+      ? `<a data-msg="copy" title="Copy the open comments for your agent's chat">Copy feedback to chat (${count})</a>`
+      : "";
     const nav = `<div class="nav">
   <button class="secondary" data-msg="back" ${session.canGoBack ? "" : "disabled"}>Back</button>
   <button data-msg="next" ${session.canGoNext ? "" : "disabled"}>${session.position === 0 ? "Start" : "Next"}</button>
@@ -107,6 +119,7 @@ export class Panel implements vscode.WebviewViewProvider, vscode.Disposable {
       return `<div class="meta">Overview · ${session.stepCount} steps</div>
 <h2>${escape(wt.title)}</h2>
 <div class="md">${wt.summary ? renderMarkdown(wt.summary) : ""}</div>
+${copy ? `<div class="actions">${copy}</div>` : ""}
 ${nav}`;
     }
 
@@ -126,6 +139,7 @@ ${nav}`;
 <a class="loc" data-msg="reveal" title="Show in editor">${location}</a>
 ${note}
 <div class="md">${renderMarkdown(step.why)}</div>
+<div class="actions">${view.kind === "step" ? `<a data-msg="comment">Comment on this step</a>` : ""}${copy}</div>
 ${nav}`;
   }
 }

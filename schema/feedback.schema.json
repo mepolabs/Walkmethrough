@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/mepolabs/walkmethrough/schema/feedback.schema.json",
-  "title": "Walkmethrough feedback file (v1)",
+  "title": "Walkmethrough feedback file (v1): .walkthrough/<session>.feedback.yaml",
   "type": "object",
   "required": ["version", "entries"],
   "properties": {
@@ -10,13 +10,13 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "walkthrough", "file", "lines", "comment", "status", "created"],
+        "required": ["id", "file", "lines", "comment", "status", "created"],
         "properties": {
           "id": { "type": "string", "minLength": 1 },
-          "walkthrough": { "type": "string", "minLength": 1, "description": "File name of the walkthrough the comment was made in." },
-          "step": { "type": "integer", "minimum": 1, "description": "1-based step index." },
+          "step": { "type": "integer", "minimum": 1, "description": "1-based step index in this file's walkthrough." },
           "file": { "type": "string", "minLength": 1 },
           "lines": { "$ref": "walkthrough.schema.json#/$defs/lines" },
+          "anchor": { "type": "string", "minLength": 1, "description": "First line(s) of the commented range, copied when the comment is made; used to re-find the lines after edits." },
           "comment": { "type": "string", "minLength": 1 },
           "status": { "enum": ["open", "applied"] },
           "created": { "type": "string", "format": "date-time" }

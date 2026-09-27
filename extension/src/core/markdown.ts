@@ -32,6 +32,19 @@ export function renderMarkdown(text: string): string {
   return md.render(linkStepReferences(text));
 }
 
+/**
+ * `renderMarkdown` for editor surfaces that can't intercept link clicks (the
+ * inline step comment): step links become `command:<command>?[N]` URIs. Only
+ * links the renderer already validated are rewritten; untrusted text can't
+ * produce a `command:` link of its own.
+ */
+export function renderMarkdownForEditor(text: string, command: string): string {
+  return renderMarkdown(text).replace(
+    /href="#step-(\d+)"/g,
+    (_, n: string) => `href="command:${command}?${encodeURIComponent(JSON.stringify([Number(n)]))}"`,
+  );
+}
+
 /** The 1-based step number a rendered link points to, or undefined for other links. */
 export function stepFromHref(href: string): number | undefined {
   const m = STEP_LINK.exec(href);

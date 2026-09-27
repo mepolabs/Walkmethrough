@@ -1,0 +1,18 @@
+version: 1
+entries:
+  - id: fb-20260927-141502-a1b2
+    step: 3
+    file: src/orders/service.ts
+    lines: [28, 30]
+    anchor: 'if (order.status !== "pending") {'
+    comment: Paid orders should also be cancellable if they have not shipped yet; add a refund TODO.
+    status: open
+    created: 2026-09-27T14:15:02Z
+  - id: fb-20260927-201339-kjr3
+    step: 5
+    file: src/orders/repository.ts
+    lines: [42, 49]
+    anchor: "function toOrder(row: any): Order {"
+    comment: change this
+    status: open
+    created: 2026-09-27T20:13:39Z

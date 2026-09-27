@@ -13,7 +13,7 @@ Walkmethrough closes that gap with three pieces joined by two files in the repo:
  Coding agent + skill ──writes at session end──▶ .walkthrough/<session>.yaml
         ▲                                                  │ played back
         │ agent reads and applies on request               ▼
- .walkthrough/feedback.yaml ◀──reviewer comments── VS Code extension
+ .walkthrough/<session>.feedback.yaml ◀──comments── VS Code extension
 ```
 
 1. **Agent skill** — a `SKILL.md` that tells the agent to write
@@ -22,10 +22,10 @@ Walkmethrough closes that gap with three pieces joined by two files in the repo:
 2. **VS Code extension** — loads the walkthrough, opens each step's file, highlights
    its lines and shows the explanation in a side panel with **Next** and **Back**.
    Reviewers comment on any step using VS Code's native Comments API.
-3. **Feedback loop** — every comment is saved to `.walkthrough/feedback.yaml` with
-   file, lines and text. The skill tells the agent to read that file and apply it
-   when the user asks. A copy-to-chat button puts the same text on the clipboard
-   for any harness.
+3. **Feedback loop** — every comment is saved with file, lines and text to
+   `.walkthrough/<session>.feedback.yaml`, next to the walkthrough it was made
+   in. The skill tells the agent to read that file and apply it when the user
+   asks. A copy-to-chat button puts the same text on the clipboard for any harness.
 
 Targets: Claude Code, Codex, GitHub Copilot and Cursor. Open source.
 
@@ -48,10 +48,11 @@ generate a "Changes Tour" over MCP. Walkmethrough adds:
 | D2 | YAML, not JSON, for both files. | Agents write multi-line prose (`why`) more reliably in YAML block scalars; humans can read and hand-edit it. |
 | D3 | Files carry `version: 1`. | One extra field buys forward compatibility; the player refuses unknown major versions with a clear message. |
 | D4 | Line numbers are 1-based and inclusive. | Matches what editors, `git diff` and agents show. |
-| D5 | The extension never rewrites a walkthrough file. | The file is the agent's claim; reviewer state (position, comments) lives elsewhere. |
+| D5 | The extension never rewrites a walkthrough file. | The file is the agent's claim; reviewer state lives elsewhere (position in VS Code `workspaceState`, comments in the feedback file, D9). Agents also tend to regenerate a file wholesale, which would silently drop anything the extension had added to it. |
 | D6 | Feedback entries reference steps by 1-based index **and** carry `file`/`lines`. | The index gives context; file and lines make the entry actionable even if the walkthrough is regenerated. |
 | D7 | Walkthrough text is untrusted input. | It is written by an agent and can arrive in a pull request. The player never runs anything a walkthrough says to (no command links, scripts, `when` conditions) and renders Markdown through an allowlist (§5.2.2). |
 | D8 | Commit SHAs are read from the YAML source text. | Unquoted, YAML turns `0123456` into `123456` and `12e4567` into a float. The skill also asks agents to quote them. |
+| D9 | One feedback file per walkthrough, `<session>.feedback.yaml`, not one per repo and not inside the walkthrough. | Comments stay scoped to the walkthrough they were made in: threads, Copy to chat and the agent's apply step can't pick up another session's comments, and deleting a walkthrough's two files removes both. Keeping it out of the walkthrough file preserves D5. |
 
 ## 4. File formats
 
@@ -63,7 +64,8 @@ this section explains them.
 
 `<session>` is a filename-safe id chosen by the agent, recommended
 `YYYY-MM-DD-<short-slug>` (e.g. `2026-09-27-order-cancel`). Any `*.yaml` or
-`*.yml` in `.walkthrough/` other than `feedback.yaml` is a walkthrough.
+`*.yml` in `.walkthrough/` is a walkthrough, except `*.feedback.yaml` /
+`*.feedback.yml` (§4.2).
 
 | Field | Level | Required | Type | Purpose |
 |-------|-------|----------|------|---------|
@@ -104,18 +106,20 @@ steps:
       New route. The controller only parses the id and maps errors to HTTP codes.
 ```
 
-### 4.2 Feedback file — `.walkthrough/feedback.yaml`
+### 4.2 Feedback file — `.walkthrough/<session>.feedback.yaml`
 
-One file per repo, appended to by the extension.
+One file per walkthrough (D9), next to it and named after it:
+`2026-09-27-order-cancel.yaml` → `2026-09-27-order-cancel.feedback.yaml`
+(`.yml` → `.feedback.yml`). The extension creates it on the first comment.
 
 ```yaml
 version: 1
 entries:
   - id: fb-20260927-141502-a1b2         # unique, stable
-    walkthrough: 2026-09-27-order-cancel.yaml
     step: 2                              # 1-based step index
     file: src/orders/service.ts
     lines: [8, 19]
+    anchor: "async cancel(id: string) {"  # optional
     comment: Return 409 instead of throwing a generic Error here.
     status: open                         # open | applied
     created: 2026-09-27T14:15:02Z
@@ -124,14 +128,16 @@ entries:
 | Field | Required | Purpose |
 |-------|----------|---------|
 | `id` | yes | Stable id so the extension can update/delete a comment. |
-| `walkthrough` | yes | File name of the walkthrough the comment was made in. |
-| `step` | no | 1-based step index; absent for comments made outside a step. |
+| `step` | no | 1-based step index in this file's walkthrough; absent for comments made outside a step. |
 | `file`, `lines` | yes | Where the comment points (same rules as steps). |
+| `anchor` | no | First line(s) of the commented range, copied when the comment is made, so the extension and the agent can re-find the lines after edits (§5.2.1). |
 | `comment` | yes | Reviewer's text. |
 | `status` | yes | `open` until the agent applies it, then `applied`. |
 | `created` | yes | ISO-8601 UTC timestamp. |
 
-The agent flips `status` to `applied` after acting on an entry; it never deletes entries.
+Both the extension and the agent write this file. The agent only flips `status`
+to `applied` after acting on an entry; it never deletes entries or edits other
+fields. The extension owns everything else (§5.3).
 
 ## 5. Component specs
 
@@ -146,8 +152,10 @@ The agent flips `status` to `applied` after acting on an entry; it never deletes
   1–4 sentences; `anchor` is copied verbatim from the file; every changed hunk
   should be in some step (the coverage check will flag gaps); SHAs are quoted;
   `head_commit` is set only when the described changes are all committed.
-- **Apply mode**: read `.walkthrough/feedback.yaml`, act on every `status: open`
-  entry, set each to `applied`, and summarise what changed.
+- **Apply mode**: pick the walkthrough the user names (or the newest one with
+  open feedback, and say which), read its `<session>.feedback.yaml`, act on
+  every `status: open` entry, set each to `applied`, and summarise what changed.
+  Never read or change another walkthrough's feedback file.
 - Installation: `.agents/skills/walkthrough/` (Codex, Copilot, Cursor) and a copy
   in `.claude/skills/walkthrough/` (Claude Code).
 - Claude Code only: an optional `Stop` hook (`skill/hooks/require-walkthrough.mjs`)
@@ -178,6 +186,14 @@ Engine: VS Code `^1.90`; also published to Open VSX so Cursor can install it.
 - A webview view **Walkthrough** (Explorer sidebar) shows: title, "Step k of N",
   step title, rendered `why`, file:lines link, a warning banner when the anchor
   was relocated or not found, and **Back / Next** buttons.
+- The same explanation also appears in the editor, directly below the step's
+  lines, as a read-only comment thread (controller `walkmethrough`, context value
+  `walkmethrough.step`): label "Step k of N", the step title as author, rendered
+  `why` and the relocation warning, with Back / Next / Close in its header. One
+  thread exists at a time; none on the overview or when the file is missing.
+  Setting `walkmethrough.inlineExplanation` (default `true`) turns it off. The
+  body is the §5.2.2 HTML with step links rewritten to `command:walkmethrough.goto`
+  URIs; the `MarkdownString` trusts only that command.
 - A status-bar item shows `$(book) k/N`; clicking it runs Next.
 - The context key `walkmethrough.playing` is true while a walkthrough is open.
 - A file that fails validation opens nothing and shows every error with its
@@ -229,13 +245,24 @@ unit-tested:
 
 - A `CommentController` (`walkmethrough`) lets reviewers start a thread on any
   line range in any file while a walkthrough is open; the active step's range
-  is offered as the default.
-- Creating, editing or deleting a comment writes `feedback.yaml` (§4.2)
-  atomically (write temp file, rename).
-- Existing `open` entries are shown as threads when the walkthrough opens.
-- **Copy to chat** (thread action and panel button) copies:
-  `file:start-end — comment` lines for all open entries, prefixed with
-  "Apply this review feedback:".
+  is offered as the default (**Comment on Step**: a button in the step's inline
+  thread header and in the panel). Every comment belongs to the open walkthrough and
+  goes to its feedback file (§4.2); `step` is set when the range overlaps the
+  current step.
+- Only the open walkthrough's `open` entries are shown as threads, relocated by
+  their `anchor` when they have one. `applied` entries are hidden.
+- Creating, editing or deleting a comment is a read-modify-write by `id`:
+  re-read the file, apply the one change, write atomically (temp file, rename).
+  This keeps an agent's concurrent `status` edits instead of overwriting them.
+- A saved comment can be edited or deleted (with a confirmation) from its
+  thread; reviewer comments have no replies, one entry per thread.
+- The extension watches the feedback file and refreshes the threads when it
+  changes on disk (e.g. the agent marked entries `applied`).
+- **Copy to chat** (panel title-bar button, a panel link showing the count, and
+  the command palette) copies the open entries of
+  the open walkthrough only, as `file:start-end — comment` lines, prefixed with
+  "Apply this review feedback on `.walkthrough/<session>.yaml`:" so the agent
+  knows which feedback file to update.
 
 ### 5.4 Coverage check (roadmap step 5)
 
@@ -277,8 +304,8 @@ extension/                   VS Code extension (TypeScript)
 |---|------|--------|
 | 1 | **Schema** — freeze v1 fields, two hand-made examples | done |
 | 2 | **Skill** — SKILL.md; test on real sessions in Claude Code and Codex | written; real-session testing pending |
-| 3 | **Player** — load YAML, highlight, Next/Back, explanation panel | done (first cut); unit-tested, VS Code integration test written but not yet run. Planned: seen-step progress, **Show as written** |
-| 4 | **Comments** — native threads → `feedback.yaml`, copy-to-chat | not started |
+| 3 | **Player** — load YAML, highlight, Next/Back, explanation panel | done (first cut), plus inline explanation in the editor; unit and VS Code integration tests pass. Planned: seen-step progress, **Show as written** |
+| 4 | **Comments** — native threads → `<session>.feedback.yaml`, copy-to-chat | done (first cut); unit and VS Code integration tests pass |
 | 5 | **Coverage check** — diff vs `base_commit`, show uncovered lines | not started |
 | 6 | **Ship** — Marketplace + Open VSX; installer placing the skill per harness | not started |
 
@@ -325,5 +352,5 @@ is what we took, what we deferred, and what we left out.
 | CodeTour `pattern` (regex) | Locate a step by regular expression. | Agents write regexes poorly, and a bad regex fails silently. A literal first-line `anchor` is easier to write correctly and to check. |
 | CodeTour `line` / `selection` with columns | Point at one line or a character span. | A reviewer reads whole logical units, so a line range is the right grain. |
 | CodeTour `commands`, `when`, `>>` shell links, "Insert Code" | Interactive-tutorial features. | They run things, which D7 rules out. They also don't help anyone review a diff. |
-| Fork ADR 0002 | One fixed output file, replaced on each generation. | We keep one file per session so several sessions can be reviewed, and so `feedback.yaml` entries can name the walkthrough they came from. |
+| Fork ADR 0002 | One fixed output file, replaced on each generation. | We keep one file per session so several sessions can be reviewed, each with its own feedback file (D9). |
 | CodeTour `nextTour`, `isPrimary` | Linking tours and choosing a primary one. | Tours across sessions are out of scope (§9). |
