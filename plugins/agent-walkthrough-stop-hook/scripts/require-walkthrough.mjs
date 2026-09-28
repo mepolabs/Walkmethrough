@@ -2,7 +2,7 @@
 // Claude Code Stop hook: asks the agent to write a walkthrough before it stops
 // when the working tree has changes newer than the latest walkthrough file.
 //
-// Installed by the `walkmethrough-stop-hook` Claude Code plugin (see
+// Installed by the `agent-walkthrough-stop-hook` Claude Code plugin (see
 // ../hooks/hooks.json). To use it without the plugin, copy this file to
 // .claude/hooks/ and register it in .claude/settings.json:
 //   { "hooks": { "Stop": [ { "hooks": [ { "type": "command",

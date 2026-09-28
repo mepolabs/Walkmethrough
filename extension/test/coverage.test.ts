@@ -99,7 +99,7 @@ test("counts covered lines and lists the rest", () => {
 // ── git, against a throwaway repository ─────────────────────────────────────
 
 function repo(): { dir: string; git: (...args: string[]) => string; write: (p: string, s: string) => void } {
-  const dir = mkdtempSync(join(tmpdir(), "walkmethrough-"));
+  const dir = mkdtempSync(join(tmpdir(), "agent-walkthrough-"));
   const git = (...args: string[]) =>
     execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", ...args], {
       cwd: dir,
@@ -176,7 +176,7 @@ test("commits mode: base..head ignores later edits on disk", async () => {
 
 test("reports unknown commits and folders outside git", async () => {
   const { dir, git, write } = repo();
-  const outside = mkdtempSync(join(tmpdir(), "walkmethrough-nogit-"));
+  const outside = mkdtempSync(join(tmpdir(), "agent-walkthrough-nogit-"));
   try {
     write("a.ts", "1\n");
     git("add", "-A");

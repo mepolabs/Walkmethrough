@@ -23,14 +23,14 @@ function activeFileAndLine(): [string, number] {
 }
 
 export async function run(): Promise<void> {
-  const ext = vscode.extensions.getExtension<Api>("mepolabs.walkmethrough");
+  const ext = vscode.extensions.getExtension<Api>("mepolabs.agent-walkthrough");
   assert.ok(ext, "extension is installed");
   const api = await ext.activate();
   const root = vscode.workspace.workspaceFolders![0].uri;
   const file = vscode.Uri.joinPath(root, ".walkthrough", "2026-09-27-order-cancel.yaml");
 
   await check("opens on the overview", async () => {
-    await vscode.commands.executeCommand("walkmethrough.open", file);
+    await vscode.commands.executeCommand("agent-walkthrough.open", file);
     assert.equal(api.player.active?.position, 0);
     assert.equal(api.player.active?.walkthrough.title, "Cancel a pending order");
   });
@@ -44,7 +44,7 @@ export async function run(): Promise<void> {
       ["src/orders/repository.ts", 42],
     ];
     for (const [path, line] of expected) {
-      await vscode.commands.executeCommand("walkmethrough.next");
+      await vscode.commands.executeCommand("agent-walkthrough.next");
       assert.deepEqual(activeFileAndLine(), [path, line]);
       const view = api.player.view;
       assert.equal(view.kind === "step" && view.range.status, "exact");
@@ -63,7 +63,7 @@ export async function run(): Promise<void> {
     assert.deepEqual([thread.range!.start.line + 1, thread.range!.end.line + 1], [view.range.start, view.range.end]);
     assert.equal(thread.comments[0].author.name, api.player.active?.step?.title);
 
-    await vscode.commands.executeCommand("walkmethrough.goto", 5);
+    await vscode.commands.executeCommand("agent-walkthrough.goto", 5);
     assert.equal(api.player.active?.position, 5, "step links pass a number to goto");
     assert.notEqual(api.inline.thread, thread, "the old thread is replaced");
 
@@ -106,14 +106,14 @@ export async function run(): Promise<void> {
     await check("editing a comment rewrites only that entry", async () => {
       const comment = api.review.thread(id)!.comments[0] as vscode.Comment & { body: string };
       comment.body = "Use one DomainError with a code field.";
-      await vscode.commands.executeCommand("walkmethrough.comment.save", comment);
+      await vscode.commands.executeCommand("agent-walkthrough.comment.save", comment);
       const text = await readFeedback();
       assert.match(text, /comment: Use one DomainError with a code field\./);
       assert.match(text, /comment: Paid orders should also be cancellable/);
     });
 
     await check("Copy to chat names the walkthrough and lists its open comments", async () => {
-      await vscode.commands.executeCommand("walkmethrough.copyFeedback");
+      await vscode.commands.executeCommand("agent-walkthrough.copyFeedback");
       const lines = (await vscode.env.clipboard.readText()).split("\n");
       assert.equal(lines[0], "Apply this review feedback on `.walkthrough/2026-09-27-order-cancel.yaml`:");
       assert.equal(lines[1], "");
@@ -169,7 +169,7 @@ export async function run(): Promise<void> {
   });
 
   await check("Back returns to the previous step", async () => {
-    await vscode.commands.executeCommand("walkmethrough.back");
+    await vscode.commands.executeCommand("agent-walkthrough.back");
     assert.deepEqual(activeFileAndLine(), ["src/orders/repository.ts", 33]);
   });
 
@@ -190,7 +190,7 @@ export async function run(): Promise<void> {
   });
 
   await check("Close clears the session", async () => {
-    await vscode.commands.executeCommand("walkmethrough.close");
+    await vscode.commands.executeCommand("agent-walkthrough.close");
     assert.equal(api.player.active, undefined);
     assert.equal(api.inline.thread, undefined);
     assert.equal(api.review.file, undefined);

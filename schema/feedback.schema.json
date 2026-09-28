@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/mepolabs/walkmethrough/schema/feedback.schema.json",
-  "title": "Walkmethrough feedback file (v1): .walkthrough/<session>.feedback.yaml",
+  "$id": "https://github.com/mepolabs/agent-walkthrough/schema/feedback.schema.json",
+  "title": "Agent Walkthrough feedback file (v1): .walkthrough/<session>.feedback.yaml",
   "type": "object",
   "required": ["version", "entries"],
   "properties": {

@@ -1,17 +1,17 @@
 {
-  "name": "walkmethrough",
-  "displayName": "Walkmethrough",
+  "name": "agent-walkthrough",
+  "displayName": "Agent Walkthrough",
   "description": "Play back agent-written code walkthroughs step by step and send review comments back to the agent.",
   "version": "0.1.0",
   "publisher": "mepolabs",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mepolabs/walkmethrough"
+    "url": "https://github.com/mepolabs/agent-walkthrough"
   },
-  "homepage": "https://github.com/mepolabs/walkmethrough#readme",
+  "homepage": "https://github.com/mepolabs/agent-walkthrough#readme",
   "bugs": {
-    "url": "https://github.com/mepolabs/walkmethrough/issues"
+    "url": "https://github.com/mepolabs/agent-walkthrough/issues"
   },
   "engines": {
     "vscode": "^1.90.0"
@@ -36,90 +36,90 @@
   "contributes": {
     "commands": [
       {
-        "command": "walkmethrough.open",
+        "command": "agent-walkthrough.open",
         "title": "Open…",
         "category": "Walkthrough",
         "icon": "$(book)"
       },
       {
-        "command": "walkmethrough.next",
+        "command": "agent-walkthrough.next",
         "title": "Next Step",
         "category": "Walkthrough",
         "icon": "$(arrow-right)",
-        "enablement": "walkmethrough.playing"
+        "enablement": "agent-walkthrough.playing"
       },
       {
-        "command": "walkmethrough.back",
+        "command": "agent-walkthrough.back",
         "title": "Previous Step",
         "category": "Walkthrough",
         "icon": "$(arrow-left)",
-        "enablement": "walkmethrough.playing"
+        "enablement": "agent-walkthrough.playing"
       },
       {
-        "command": "walkmethrough.goto",
+        "command": "agent-walkthrough.goto",
         "title": "Go to Step…",
         "category": "Walkthrough",
-        "enablement": "walkmethrough.playing"
+        "enablement": "agent-walkthrough.playing"
       },
       {
-        "command": "walkmethrough.close",
+        "command": "agent-walkthrough.close",
         "title": "Close",
         "category": "Walkthrough",
         "icon": "$(close)",
-        "enablement": "walkmethrough.playing"
+        "enablement": "agent-walkthrough.playing"
       },
       {
-        "command": "walkmethrough.commentOnStep",
+        "command": "agent-walkthrough.commentOnStep",
         "title": "Comment on Step",
         "category": "Walkthrough",
         "icon": "$(comment)",
-        "enablement": "walkmethrough.playing"
+        "enablement": "agent-walkthrough.playing"
       },
       {
-        "command": "walkmethrough.copyFeedback",
+        "command": "agent-walkthrough.copyFeedback",
         "title": "Copy Feedback to Chat",
         "category": "Walkthrough",
         "icon": "$(copy)",
-        "enablement": "walkmethrough.playing"
+        "enablement": "agent-walkthrough.playing"
       },
       {
-        "command": "walkmethrough.comment.create",
+        "command": "agent-walkthrough.comment.create",
         "title": "Add Comment"
       },
       {
-        "command": "walkmethrough.comment.cancelDraft",
+        "command": "agent-walkthrough.comment.cancelDraft",
         "title": "Cancel"
       },
       {
-        "command": "walkmethrough.comment.edit",
+        "command": "agent-walkthrough.comment.edit",
         "title": "Edit",
         "icon": "$(edit)"
       },
       {
-        "command": "walkmethrough.comment.delete",
+        "command": "agent-walkthrough.comment.delete",
         "title": "Delete",
         "icon": "$(trash)"
       },
       {
-        "command": "walkmethrough.comment.save",
+        "command": "agent-walkthrough.comment.save",
         "title": "Save"
       },
       {
-        "command": "walkmethrough.comment.cancelEdit",
+        "command": "agent-walkthrough.comment.cancelEdit",
         "title": "Cancel"
       },
       {
-        "command": "walkmethrough.refreshCoverage",
+        "command": "agent-walkthrough.refreshCoverage",
         "title": "Refresh Coverage",
         "category": "Walkthrough",
         "icon": "$(refresh)",
-        "enablement": "walkmethrough.playing"
+        "enablement": "agent-walkthrough.playing"
       }
     ],
     "configuration": {
       "title": "Walkthrough",
       "properties": {
-        "walkmethrough.inlineExplanation": {
+        "agent-walkthrough.inlineExplanation": {
           "type": "boolean",
           "default": true,
           "description": "Show each step's explanation in the editor, right below the highlighted lines, as well as in the Walkthrough view."
@@ -128,141 +128,141 @@
     },
     "keybindings": [
       {
-        "command": "walkmethrough.next",
+        "command": "agent-walkthrough.next",
         "key": "alt+]",
-        "when": "walkmethrough.playing"
+        "when": "agent-walkthrough.playing"
       },
       {
-        "command": "walkmethrough.back",
+        "command": "agent-walkthrough.back",
         "key": "alt+[",
-        "when": "walkmethrough.playing"
+        "when": "agent-walkthrough.playing"
       }
     ],
     "views": {
       "explorer": [
         {
           "type": "webview",
-          "id": "walkmethrough.panel",
+          "id": "agent-walkthrough.panel",
           "name": "Walkthrough"
         },
         {
-          "id": "walkmethrough.coverage",
+          "id": "agent-walkthrough.coverage",
           "name": "Not in Walkthrough",
-          "when": "walkmethrough.playing"
+          "when": "agent-walkthrough.playing"
         }
       ]
     },
     "menus": {
       "view/title": [
         {
-          "command": "walkmethrough.open",
-          "when": "view == walkmethrough.panel",
+          "command": "agent-walkthrough.open",
+          "when": "view == agent-walkthrough.panel",
           "group": "navigation@1"
         },
         {
-          "command": "walkmethrough.copyFeedback",
-          "when": "view == walkmethrough.panel && walkmethrough.playing",
+          "command": "agent-walkthrough.copyFeedback",
+          "when": "view == agent-walkthrough.panel && agent-walkthrough.playing",
           "group": "navigation@2"
         },
         {
-          "command": "walkmethrough.close",
-          "when": "view == walkmethrough.panel && walkmethrough.playing",
+          "command": "agent-walkthrough.close",
+          "when": "view == agent-walkthrough.panel && agent-walkthrough.playing",
           "group": "navigation@3"
         },
         {
-          "command": "walkmethrough.refreshCoverage",
-          "when": "view == walkmethrough.coverage",
+          "command": "agent-walkthrough.refreshCoverage",
+          "when": "view == agent-walkthrough.coverage",
           "group": "navigation"
         }
       ],
       "comments/commentThread/title": [
         {
-          "command": "walkmethrough.commentOnStep",
-          "when": "commentController == walkmethrough && commentThread == walkmethrough.step",
+          "command": "agent-walkthrough.commentOnStep",
+          "when": "commentController == agent-walkthrough && commentThread == agent-walkthrough.step",
           "group": "inline@0"
         },
         {
-          "command": "walkmethrough.back",
-          "when": "commentController == walkmethrough && commentThread == walkmethrough.step",
+          "command": "agent-walkthrough.back",
+          "when": "commentController == agent-walkthrough && commentThread == agent-walkthrough.step",
           "group": "inline@1"
         },
         {
-          "command": "walkmethrough.next",
-          "when": "commentController == walkmethrough && commentThread == walkmethrough.step",
+          "command": "agent-walkthrough.next",
+          "when": "commentController == agent-walkthrough && commentThread == agent-walkthrough.step",
           "group": "inline@2"
         },
         {
-          "command": "walkmethrough.close",
-          "when": "commentController == walkmethrough && commentThread == walkmethrough.step",
+          "command": "agent-walkthrough.close",
+          "when": "commentController == agent-walkthrough && commentThread == agent-walkthrough.step",
           "group": "inline@3"
         }
       ],
       "comments/commentThread/context": [
         {
-          "command": "walkmethrough.comment.create",
-          "when": "commentController == walkmethrough && commentThreadIsEmpty",
+          "command": "agent-walkthrough.comment.create",
+          "when": "commentController == agent-walkthrough && commentThreadIsEmpty",
           "group": "inline@1"
         },
         {
-          "command": "walkmethrough.comment.cancelDraft",
-          "when": "commentController == walkmethrough && commentThreadIsEmpty",
+          "command": "agent-walkthrough.comment.cancelDraft",
+          "when": "commentController == agent-walkthrough && commentThreadIsEmpty",
           "group": "inline@2"
         }
       ],
       "comments/comment/title": [
         {
-          "command": "walkmethrough.comment.edit",
-          "when": "commentController == walkmethrough && comment == walkmethrough.feedback",
+          "command": "agent-walkthrough.comment.edit",
+          "when": "commentController == agent-walkthrough && comment == agent-walkthrough.feedback",
           "group": "inline@1"
         },
         {
-          "command": "walkmethrough.comment.delete",
-          "when": "commentController == walkmethrough && comment == walkmethrough.feedback",
+          "command": "agent-walkthrough.comment.delete",
+          "when": "commentController == agent-walkthrough && comment == agent-walkthrough.feedback",
           "group": "inline@2"
         }
       ],
       "comments/comment/context": [
         {
-          "command": "walkmethrough.comment.save",
-          "when": "commentController == walkmethrough && comment == walkmethrough.feedback",
+          "command": "agent-walkthrough.comment.save",
+          "when": "commentController == agent-walkthrough && comment == agent-walkthrough.feedback",
           "group": "inline@1"
         },
         {
-          "command": "walkmethrough.comment.cancelEdit",
-          "when": "commentController == walkmethrough && comment == walkmethrough.feedback",
+          "command": "agent-walkthrough.comment.cancelEdit",
+          "when": "commentController == agent-walkthrough && comment == agent-walkthrough.feedback",
           "group": "inline@2"
         }
       ],
       "commandPalette": [
         {
-          "command": "walkmethrough.comment.create",
+          "command": "agent-walkthrough.comment.create",
           "when": "false"
         },
         {
-          "command": "walkmethrough.comment.cancelDraft",
+          "command": "agent-walkthrough.comment.cancelDraft",
           "when": "false"
         },
         {
-          "command": "walkmethrough.comment.edit",
+          "command": "agent-walkthrough.comment.edit",
           "when": "false"
         },
         {
-          "command": "walkmethrough.comment.delete",
+          "command": "agent-walkthrough.comment.delete",
           "when": "false"
         },
         {
-          "command": "walkmethrough.comment.save",
+          "command": "agent-walkthrough.comment.save",
           "when": "false"
         },
         {
-          "command": "walkmethrough.comment.cancelEdit",
+          "command": "agent-walkthrough.comment.cancelEdit",
           "when": "false"
         }
       ]
     },
     "colors": [
       {
-        "id": "walkmethrough.stepHighlight",
+        "id": "agent-walkthrough.stepHighlight",
         "description": "Background of the lines covered by the current walkthrough step.",
         "defaults": {
           "dark": "#3a6ea522",
@@ -271,7 +271,7 @@
         }
       },
       {
-        "id": "walkmethrough.stepGutter",
+        "id": "agent-walkthrough.stepGutter",
         "description": "Gutter bar marking the lines of the current walkthrough step.",
         "defaults": {
           "dark": "#4f8fd6",
@@ -280,7 +280,7 @@
         }
       },
       {
-        "id": "walkmethrough.uncoveredGutter",
+        "id": "agent-walkthrough.uncoveredGutter",
         "description": "Marker on changed lines that no walkthrough step covers.",
         "defaults": {
           "dark": "#d18616",

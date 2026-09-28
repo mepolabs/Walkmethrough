@@ -22,13 +22,13 @@ export function activate(context: vscode.ExtensionContext): Api | undefined {
 
   const player = new Player(root);
   // One controller for both the step explanation and review comments (spec §5.3).
-  const comments = vscode.comments.createCommentController("walkmethrough", "Walkthrough");
+  const comments = vscode.comments.createCommentController("agent-walkthrough", "Walkthrough");
   const inline = new InlineStep(comments, player);
   const review = new ReviewComments(comments, player, root);
   const coverage = new CoverageCheck(player, root);
   const panel = new Panel(player, review, coverage);
   const status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
-  status.command = "walkmethrough.next";
+  status.command = "agent-walkthrough.next";
   status.tooltip = "Walkthrough: next step";
 
   player.onDidChange(() => {
@@ -47,25 +47,25 @@ export function activate(context: vscode.ExtensionContext): Api | undefined {
     coverage,
     status,
     vscode.window.registerWebviewViewProvider(Panel.id, panel),
-    vscode.commands.registerCommand("walkmethrough.open", (uri?: vscode.Uri) => openCommand(root, player, uri)),
-    vscode.commands.registerCommand("walkmethrough.next", () => player.next()),
-    vscode.commands.registerCommand("walkmethrough.back", () => player.back()),
+    vscode.commands.registerCommand("agent-walkthrough.open", (uri?: vscode.Uri) => openCommand(root, player, uri)),
+    vscode.commands.registerCommand("agent-walkthrough.next", () => player.next()),
+    vscode.commands.registerCommand("agent-walkthrough.back", () => player.back()),
     // Step links in the inline explanation pass the step number; the palette passes nothing.
-    vscode.commands.registerCommand("walkmethrough.goto", (position?: unknown) =>
+    vscode.commands.registerCommand("agent-walkthrough.goto", (position?: unknown) =>
       typeof position === "number" ? player.goto(position) : gotoCommand(player),
     ),
-    vscode.commands.registerCommand("walkmethrough.close", () => player.close()),
-    vscode.commands.registerCommand("walkmethrough.commentOnStep", () => review.commentOnStep()),
-    vscode.commands.registerCommand("walkmethrough.copyFeedback", () => review.copyToChat()),
-    vscode.commands.registerCommand("walkmethrough.refreshCoverage", () => coverage.refresh()),
-    vscode.commands.registerCommand("walkmethrough.comment.create", (r: vscode.CommentReply) => review.create(r)),
-    vscode.commands.registerCommand("walkmethrough.comment.cancelDraft", (r: vscode.CommentReply) =>
+    vscode.commands.registerCommand("agent-walkthrough.close", () => player.close()),
+    vscode.commands.registerCommand("agent-walkthrough.commentOnStep", () => review.commentOnStep()),
+    vscode.commands.registerCommand("agent-walkthrough.copyFeedback", () => review.copyToChat()),
+    vscode.commands.registerCommand("agent-walkthrough.refreshCoverage", () => coverage.refresh()),
+    vscode.commands.registerCommand("agent-walkthrough.comment.create", (r: vscode.CommentReply) => review.create(r)),
+    vscode.commands.registerCommand("agent-walkthrough.comment.cancelDraft", (r: vscode.CommentReply) =>
       review.cancelDraft(r),
     ),
-    vscode.commands.registerCommand("walkmethrough.comment.edit", (c: FeedbackComment) => review.edit(c)),
-    vscode.commands.registerCommand("walkmethrough.comment.save", (c: FeedbackComment) => review.save(c)),
-    vscode.commands.registerCommand("walkmethrough.comment.cancelEdit", (c: FeedbackComment) => review.cancelEdit(c)),
-    vscode.commands.registerCommand("walkmethrough.comment.delete", (c: FeedbackComment) => review.delete(c)),
+    vscode.commands.registerCommand("agent-walkthrough.comment.edit", (c: FeedbackComment) => review.edit(c)),
+    vscode.commands.registerCommand("agent-walkthrough.comment.save", (c: FeedbackComment) => review.save(c)),
+    vscode.commands.registerCommand("agent-walkthrough.comment.cancelEdit", (c: FeedbackComment) => review.cancelEdit(c)),
+    vscode.commands.registerCommand("agent-walkthrough.comment.delete", (c: FeedbackComment) => review.delete(c)),
   );
   return { player, inline, review, coverage };
 }

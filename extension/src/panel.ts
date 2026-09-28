@@ -23,7 +23,7 @@ function nonce(): string {
 }
 
 export class Panel implements vscode.WebviewViewProvider, vscode.Disposable {
-  static readonly id = "walkmethrough.panel";
+  static readonly id = "agent-walkthrough.panel";
   private view: vscode.WebviewView | undefined;
   private readonly subscriptions: vscode.Disposable[];
 
@@ -46,7 +46,7 @@ export class Panel implements vscode.WebviewViewProvider, vscode.Disposable {
       if (msg.type === "link" && msg.href) this.followLink(msg.href);
       else if (msg.type === "next") void this.player.next();
       else if (msg.type === "back") void this.player.back();
-      else if (msg.type === "open") void vscode.commands.executeCommand("walkmethrough.open");
+      else if (msg.type === "open") void vscode.commands.executeCommand("agent-walkthrough.open");
       else if (msg.type === "reveal") void this.player.goto(this.player.active?.position ?? 0);
       else if (msg.type === "comment") this.review.commentOnStep();
       else if (msg.type === "copy") void this.review.copyToChat();
