@@ -60,7 +60,6 @@ Theme colours: `agent-walkthrough.stepHighlight`, `agent-walkthrough.stepGutter`
 ## More
 
 - [Project README](https://github.com/mepolabs/agent-walkthrough#readme): install the skill, the file formats
-- [Specification](https://github.com/mepolabs/agent-walkthrough/blob/main/spec.md)
 - [Issues](https://github.com/mepolabs/agent-walkthrough/issues)
 
 MIT licensed.

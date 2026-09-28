@@ -8,8 +8,8 @@ Thanks for helping. Bug reports, ideas and pull requests are all welcome.
   happened. If a walkthrough or feedback file is involved, attach it (or a
   trimmed-down copy).
 - **Features and format changes:** open an issue first. The file formats are a
-  contract with every agent that writes them, so changes go through the
-  [specification](spec.md) before the code.
+  contract with every agent that writes them, so agree on the change in the
+  issue before writing code.
 - **Security issues:** don't open a public issue; use
   [private vulnerability reporting](https://github.com/mepolabs/agent-walkthrough/security/advisories/new).
 
@@ -17,7 +17,6 @@ Thanks for helping. Bug reports, ideas and pull requests are all welcome.
 
 | Path | What |
 |------|------|
-| [`spec.md`](spec.md) | The specification: file formats, behaviour, decisions (§3) and roadmap (§8) |
 | [`schema/`](schema/) | JSON Schemas for the walkthrough and feedback files; the normative format |
 | [`skills/walkthrough/SKILL.md`](skills/walkthrough/SKILL.md) | The agent skill: how agents write walkthroughs and apply feedback. Kept at `skills/<name>/SKILL.md` so `gh skill`, `npx skills` and Claude Code all find it |
 | [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) | Makes this repository a Claude Code plugin marketplace |
@@ -88,9 +87,9 @@ code --extensionDevelopmentPath=/path/to/agent-walkthrough/extension /path/to/ot
 - Keep each pull request to one change, and describe what it does and why.
 - Add or update tests: unit tests for anything in `core/`, and an integration
   check in `test-integration/suite.ts` for editor behaviour.
-- If behaviour or a file format changes, update `spec.md` and, if needed,
-  `schema/` and `skills/walkthrough/SKILL.md` in the same pull request.
-- Treat walkthrough and feedback text as untrusted input (spec §5.2.2): never
+- If behaviour or a file format changes, update `schema/` and
+  `skills/walkthrough/SKILL.md` as needed in the same pull request.
+- Treat walkthrough and feedback text as untrusted input: never
   render raw HTML, and never let file content run a command.
 - Match the existing style: small modules, comments that explain why, and no
   new runtime dependencies without a good reason.

@@ -212,8 +212,7 @@ steps:
 ```
 
 Comments you leave are saved next to it, in `.walkthrough/<session>.feedback.yaml`.
-Both files have a JSON Schema in [`schema/`](schema/), and the full format is
-documented in the [specification](spec.md).
+Both formats are defined by the JSON Schemas in [`schema/`](schema/).
 
 </details>
 
