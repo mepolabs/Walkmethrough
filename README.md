@@ -1,5 +1,7 @@
 # Agent Walkthrough
 
+[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/mepolabs.agent-walkthrough?label=VS%20Code%20Marketplace)](https://marketplace.visualstudio.com/items?itemName=mepolabs.agent-walkthrough)
+
 **See how your coding agent's change actually works, step by step in VS Code,
 and send comments straight back to the agent.**
 
@@ -30,8 +32,7 @@ the code.
    walkthrough didn't explain.
 
 > **Status:** early (v0.1). Writing and reviewing walkthroughs works end to
-> end. The extension isn't on the Marketplace yet, so for now you install it
-> from a downloaded file (below).
+> end.
 
 ## Install
 
@@ -39,12 +40,39 @@ You'll need:
 
 - **VS Code** 1.90+ (or a compatible fork, such as Cursor)
 - **git**, so the coverage check can work
-- **Node.js 18+**, to build the extension
 - A coding agent: **Claude Code**, **Codex**, **GitHub Copilot**, or **Cursor**
 
 ### 1. Install the VS Code extension
 
-It isn't on the Marketplace yet, so build the install file and add it yourself:
+Install **Agent Walkthrough** from the
+[VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=mepolabs.agent-walkthrough):
+open the **Extensions** view, search for `Agent Walkthrough`, and click
+**Install**. Or from a terminal:
+
+```sh
+code --install-extension mepolabs.agent-walkthrough
+```
+
+<details>
+<summary><strong>Cursor or another VS Code fork</strong></summary>
+
+Forks like Cursor don't read the VS Code Marketplace. Download the `.vsix`
+file with **Download Extension** on the
+[Marketplace page](https://marketplace.visualstudio.com/items?itemName=mepolabs.agent-walkthrough),
+then install it:
+
+```sh
+cursor --install-extension agent-walkthrough-0.1.0.vsix
+```
+
+Or: **Extensions** view → **⋯** → **Install from VSIX…**, and pick the file.
+
+</details>
+
+<details>
+<summary><strong>Building from source</strong></summary>
+
+Needs Node.js 18+.
 
 ```sh
 git clone https://github.com/mepolabs/agent-walkthrough.git
@@ -54,9 +82,7 @@ npm run package
 code --install-extension agent-walkthrough-0.1.0.vsix
 ```
 
-Or, in VS Code: **Extensions** view → **⋯** → **Install from VSIX…**, and pick
-the file `npm run package` created. In Cursor, use `cursor --install-extension`
-or the same menu.
+</details>
 
 ### 2. Add the skill to your project
 
