@@ -1,6 +1,7 @@
 # Agent Walkthrough
 
 [![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/mepolabs.agent-walkthrough?label=VS%20Code%20Marketplace)](https://marketplace.visualstudio.com/items?itemName=mepolabs.agent-walkthrough)
+[![Open VSX](https://img.shields.io/open-vsx/v/mepolabs/agent-walkthrough?label=Open%20VSX)](https://open-vsx.org/extension/mepolabs/agent-walkthrough)
 
 **See how your coding agent's change actually works, step by step in VS Code,
 and send comments straight back to the agent.**
@@ -54,18 +55,16 @@ code --install-extension mepolabs.agent-walkthrough
 ```
 
 <details>
-<summary><strong>Cursor or another VS Code fork</strong></summary>
+<summary><strong>Cursor, VSCodium, Windsurf, or another VS Code fork</strong></summary>
 
-Forks like Cursor don't read the VS Code Marketplace. Download the `.vsix`
-file with **Download Extension** on the
-[Marketplace page](https://marketplace.visualstudio.com/items?itemName=mepolabs.agent-walkthrough),
-then install it:
+These editors install extensions from
+[Open VSX](https://open-vsx.org/extension/mepolabs/agent-walkthrough) instead.
+Search for `Agent Walkthrough` in the **Extensions** view and click
+**Install**, or from a terminal:
 
 ```sh
-cursor --install-extension agent-walkthrough-0.1.0.vsix
+cursor --install-extension mepolabs.agent-walkthrough
 ```
-
-Or: **Extensions** view → **⋯** → **Install from VSIX…**, and pick the file.
 
 </details>
 
