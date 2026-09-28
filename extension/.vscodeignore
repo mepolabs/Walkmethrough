@@ -9,3 +9,4 @@ test-integration/**
 .vscode-test/**
 .gitignore
 .vscode/**
+images/icon.svg

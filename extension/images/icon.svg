@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6D28D9"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="pin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E9E5FF"/>
+    </linearGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#1E1147" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- background -->
+  <rect width="512" height="512" fill="url(#bg)"/>
+
+  <!-- breadcrumb trail of steps leading to the pin -->
+  <circle cx="122" cy="372" r="12" fill="#FFFFFF" opacity="0.35"/>
+  <circle cx="168" cy="336" r="15" fill="#FFFFFF" opacity="0.55"/>
+  <circle cx="214" cy="300" r="18" fill="#FFFFFF" opacity="0.8"/>
+
+  <!-- the walkthrough pin -->
+  <g filter="url(#soft)">
+    <path d="M320 96
+             c-64 0 -116 51.2 -116 114.4
+             c0 85.9 90.6 176.7 111.9 196.6
+             a7.4 7.4 0 0 0 8.2 0
+             c21.3 -19.9 111.9 -110.7 111.9 -196.6
+             C436 147.2 384 96 320 96 Z"
+          fill="url(#pin)"/>
+    <circle cx="320" cy="216" r="70" fill="url(#bg)"/>
+  </g>
+
+  <!-- code glyph inside the pin -->
+  <g stroke="#FFFFFF" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M296 184 L262 216 L296 248"/>
+    <path d="M344 184 L378 216 L344 248"/>
+  </g>
+</svg>
