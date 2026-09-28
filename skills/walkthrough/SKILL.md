@@ -1,6 +1,6 @@
 ---
 name: walkthrough
-description: Write a step-by-step code walkthrough of the changes made in this session to .walkthrough/<session>.yaml, ordered by execution flow, so a reviewer can play it back in the Walkmethrough VS Code extension. Use at the end of any session that changed code, or when the user asks for a walkthrough. Also use when the user asks to apply walkthrough feedback or review comments from .walkthrough/<session>.feedback.yaml.
+description: Write a step-by-step code walkthrough of the changes made in this session to .walkthrough/<session>.yaml, ordered by execution flow, so a reviewer can play it back in the Agent Walkthrough VS Code extension. Use at the end of any session that changed code, or when the user asks for a walkthrough. Also use when the user asks to apply walkthrough feedback or review comments from .walkthrough/<session>.feedback.yaml.
 ---
 
 # Walkthrough

@@ -35,14 +35,14 @@ test("escapes raw HTML and skips images", () => {
 });
 
 test("turns step links into command links for the editor", () => {
-  const html = renderMarkdownForEditor("see [#3] and [docs](https://example.com)", "walkmethrough.goto");
-  assert.match(html, /<a href="command:walkmethrough.goto\?%5B3%5D">#3<\/a>/);
+  const html = renderMarkdownForEditor("see [#3] and [docs](https://example.com)", "agent-walkthrough.goto");
+  assert.match(html, /<a href="command:agent-walkthrough.goto\?%5B3%5D">#3<\/a>/);
   assert.match(html, /<a href="https:\/\/example.com">docs<\/a>/);
 });
 
 test("untrusted text can't smuggle a command link into the editor view", () => {
-  for (const text of ['[x](command:walkmethrough.goto?[1])', '`href="#step-1"`', 'href="#step-1"']) {
-    assert.doesNotMatch(renderMarkdownForEditor(text, "walkmethrough.goto"), /href="command:/, text);
+  for (const text of ['[x](command:agent-walkthrough.goto?[1])', '`href="#step-1"`', 'href="#step-1"']) {
+    assert.doesNotMatch(renderMarkdownForEditor(text, "agent-walkthrough.goto"), /href="command:/, text);
   }
 });
 

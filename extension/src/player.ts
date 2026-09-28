@@ -19,11 +19,11 @@ export class Player implements vscode.Disposable {
 
   private readonly highlight = vscode.window.createTextEditorDecorationType({
     isWholeLine: true,
-    backgroundColor: new vscode.ThemeColor("walkmethrough.stepHighlight"),
-    borderColor: new vscode.ThemeColor("walkmethrough.stepGutter"),
+    backgroundColor: new vscode.ThemeColor("agent-walkthrough.stepHighlight"),
+    borderColor: new vscode.ThemeColor("agent-walkthrough.stepGutter"),
     borderStyle: "solid",
     borderWidth: "0 0 0 3px",
-    overviewRulerColor: new vscode.ThemeColor("walkmethrough.stepGutter"),
+    overviewRulerColor: new vscode.ThemeColor("agent-walkthrough.stepGutter"),
     overviewRulerLane: vscode.OverviewRulerLane.Left,
   });
 
@@ -50,7 +50,7 @@ export class Player implements vscode.Disposable {
     this.session = new Session(parsed, vscode.workspace.asRelativePath(file, false));
     this.opened = file;
     this.watch(file);
-    await vscode.commands.executeCommand("setContext", "walkmethrough.playing", true);
+    await vscode.commands.executeCommand("setContext", "agent-walkthrough.playing", true);
     await this.show();
     return true;
   }
@@ -76,7 +76,7 @@ export class Player implements vscode.Disposable {
     this.opened = undefined;
     this.current = { kind: "overview" };
     for (const editor of vscode.window.visibleTextEditors) editor.setDecorations(this.highlight, []);
-    void vscode.commands.executeCommand("setContext", "walkmethrough.playing", false);
+    void vscode.commands.executeCommand("setContext", "agent-walkthrough.playing", false);
     this.changed.fire();
   }
 
@@ -101,7 +101,7 @@ export class Player implements vscode.Disposable {
       void vscode.window.showErrorMessage(`Walkthrough: ${name} is not valid.`, { modal: true, detail });
       return undefined;
     }
-    for (const w of result.warnings) console.warn(`[walkmethrough] ${name}: ${w}`);
+    for (const w of result.warnings) console.warn(`[agent-walkthrough] ${name}: ${w}`);
     return result.walkthrough;
   }
 

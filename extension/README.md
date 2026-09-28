@@ -1,4 +1,4 @@
-# Walkmethrough
+# Agent Walkthrough
 
 Play back code walkthroughs written by your coding agent, step by step, and send
 review comments back to it.
@@ -29,7 +29,7 @@ review.
 
 1. Add the agent skill to your repository. The skill is the part that makes
    your agent write walkthroughs. See the
-   [install guide](https://github.com/mepolabs/walkmethrough#2-the-agent-skill).
+   [install guide](https://github.com/mepolabs/agent-walkthrough#2-the-agent-skill).
 2. Let your agent finish a change, or ask it to "write a walkthrough".
 3. Run **Walkthrough: Open…** and pick the walkthrough.
 
@@ -51,16 +51,16 @@ The coverage check needs `git` on your `PATH`.
 
 ## Settings
 
-- `walkmethrough.inlineExplanation` (default `true`): show each step's
+- `agent-walkthrough.inlineExplanation` (default `true`): show each step's
   explanation in the editor below its lines, as well as in the side panel.
 
-Theme colours: `walkmethrough.stepHighlight`, `walkmethrough.stepGutter`,
-`walkmethrough.uncoveredGutter`.
+Theme colours: `agent-walkthrough.stepHighlight`, `agent-walkthrough.stepGutter`,
+`agent-walkthrough.uncoveredGutter`.
 
 ## More
 
-- [Project README](https://github.com/mepolabs/walkmethrough#readme): install the skill, the file formats
-- [Specification](https://github.com/mepolabs/walkmethrough/blob/main/spec.md)
-- [Issues](https://github.com/mepolabs/walkmethrough/issues)
+- [Project README](https://github.com/mepolabs/agent-walkthrough#readme): install the skill, the file formats
+- [Specification](https://github.com/mepolabs/agent-walkthrough/blob/main/spec.md)
+- [Issues](https://github.com/mepolabs/agent-walkthrough/issues)
 
 MIT licensed.

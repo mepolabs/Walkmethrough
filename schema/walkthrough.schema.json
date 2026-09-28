@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/mepolabs/walkmethrough/schema/walkthrough.schema.json",
-  "title": "Walkmethrough walkthrough file (v1)",
+  "$id": "https://github.com/mepolabs/agent-walkthrough/schema/walkthrough.schema.json",
+  "title": "Agent Walkthrough walkthrough file (v1)",
   "type": "object",
   "required": ["version", "title", "steps"],
   "properties": {

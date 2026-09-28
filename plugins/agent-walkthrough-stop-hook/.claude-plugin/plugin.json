@@ -1,11 +1,11 @@
 {
-  "name": "walkmethrough-stop-hook",
-  "displayName": "Walkmethrough: always write a walkthrough",
+  "name": "agent-walkthrough-stop-hook",
+  "displayName": "Agent Walkthrough: always write a walkthrough",
   "version": "0.1.0",
   "description": "Stop hook: before Claude finishes a session that changed code, it writes a walkthrough of the changes. Install per project (--scope project) rather than for every repository.",
   "author": { "name": "Mepolabs" },
-  "homepage": "https://github.com/mepolabs/walkmethrough",
-  "repository": "https://github.com/mepolabs/walkmethrough",
+  "homepage": "https://github.com/mepolabs/agent-walkthrough",
+  "repository": "https://github.com/mepolabs/agent-walkthrough",
   "license": "MIT",
   "keywords": ["walkthrough", "code-review", "hook"]
 }

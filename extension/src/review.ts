@@ -16,9 +16,9 @@ import { feedbackFileName } from "./core/walkthrough";
 import { Player } from "./player";
 
 /** Context values used by the `comments/*` menus in package.json. */
-const THREAD = "walkmethrough.feedback";
-const DRAFT = "walkmethrough.draft";
-const COMMENT = "walkmethrough.feedback";
+const THREAD = "agent-walkthrough.feedback";
+const DRAFT = "agent-walkthrough.draft";
+const COMMENT = "agent-walkthrough.feedback";
 
 export class FeedbackComment implements vscode.Comment {
   mode = vscode.CommentMode.Preview;
@@ -266,7 +266,7 @@ export class ReviewComments implements vscode.Disposable {
         );
         return;
       }
-      for (const w of parsed.warnings) console.warn(`[walkmethrough] ${uri.path}: ${w}`);
+      for (const w of parsed.warnings) console.warn(`[agent-walkthrough] ${uri.path}: ${w}`);
       this.entries = parsed.entries;
       await this.sync();
       this.changed.fire();

@@ -41,7 +41,7 @@ function short(rev: string): string {
 }
 
 export class CoverageCheck implements vscode.TreeDataProvider<CoverageNode>, vscode.Disposable {
-  static readonly viewId = "walkmethrough.coverage";
+  static readonly viewId = "agent-walkthrough.coverage";
 
   private state: CoverageState = { kind: "off" };
   private walkthrough: Walkthrough | undefined;
@@ -57,10 +57,10 @@ export class CoverageCheck implements vscode.TreeDataProvider<CoverageNode>, vsc
 
   private readonly marker = vscode.window.createTextEditorDecorationType({
     isWholeLine: true,
-    borderColor: new vscode.ThemeColor("walkmethrough.uncoveredGutter"),
+    borderColor: new vscode.ThemeColor("agent-walkthrough.uncoveredGutter"),
     borderStyle: "dotted",
     borderWidth: "0 0 0 2px",
-    overviewRulerColor: new vscode.ThemeColor("walkmethrough.uncoveredGutter"),
+    overviewRulerColor: new vscode.ThemeColor("agent-walkthrough.uncoveredGutter"),
     overviewRulerLane: vscode.OverviewRulerLane.Right,
   });
 

@@ -1,4 +1,4 @@
-# Walkmethrough — Specification (v1)
+# Agent Walkthrough — Specification (v1)
 
 Source plan: "Agent Walkthrough — Plan" (Claude Docs, 2026-09-27).
 
@@ -7,7 +7,7 @@ Source plan: "Agent Walkthrough — Plan" (Claude Docs, 2026-09-27).
 A coding-agent session produces a lot of code at once. Reviewing it file by file,
 in no particular order, makes it hard to see what each part does and why.
 
-Walkmethrough closes that gap with three pieces joined by two files in the repo:
+Agent Walkthrough closes that gap with three pieces joined by two files in the repo:
 
 ```
  Coding agent + skill ──writes at session end──▶ .walkthrough/<session>.yaml
@@ -33,7 +33,7 @@ Targets: Claude Code, Codex, GitHub Copilot and Cursor. Open source.
 
 [Microsoft CodeTour](https://github.com/microsoft/codetour) already plays guided
 tours, and a [community fork](https://github.com/maurice30120/codetour) can
-generate a "Changes Tour" over MCP. Walkmethrough adds:
+generate a "Changes Tour" over MCP. Agent Walkthrough adds:
 
 - **Generated from the agent's diff**, not recorded by hand.
 - **Ordered by execution flow**, not by file.
@@ -159,13 +159,13 @@ fields. The extension owns everything else (§5.3).
 - Location: `skills/walkthrough/` at the repository root, the `skills/*/SKILL.md`
   layout that `gh skill`, `npx skills` and Claude Code plugins all discover.
 - Installation (README): the Claude Code plugin marketplace
-  (`.claude-plugin/marketplace.json`, plugin `walkmethrough`, whose source is the
+  (`.claude-plugin/marketplace.json`, plugin `agent-walkthrough`, whose source is the
   repository root and which lists only `./skills/walkthrough`); `gh skill install`
   (Copilot, `.agents/skills/`); `npx skills add` (any agent); or copying the
   folder to `.agents/skills/walkthrough/` (Codex, Copilot, Cursor) and/or
   `.claude/skills/walkthrough/` (Claude Code).
 - Claude Code only: an optional `Stop` hook, shipped as its own plugin
-  (`plugins/walkmethrough-stop-hook/`) so it can be enabled per project,
+  (`plugins/agent-walkthrough-stop-hook/`) so it can be enabled per project,
   blocks the first stop of a session when the working tree has changes and no
   walkthrough was written since they were made. It honours `stop_hook_active`
   so it can never loop.
@@ -178,31 +178,31 @@ Engine: VS Code `^1.90`; also published to Open VSX so Cursor can install it.
 
 | Command | Title | Default key |
 |---------|-------|-------------|
-| `walkmethrough.open` | Walkthrough: Open… (quick-pick of `.walkthrough/*.yaml`) | — |
-| `walkmethrough.next` | Walkthrough: Next Step | `Alt+]` while playing |
-| `walkmethrough.back` | Walkthrough: Previous Step | `Alt+[` while playing |
-| `walkmethrough.goto` | Walkthrough: Go to Step… | — |
-| `walkmethrough.close` | Walkthrough: Close | — |
+| `agent-walkthrough.open` | Walkthrough: Open… (quick-pick of `.walkthrough/*.yaml`) | — |
+| `agent-walkthrough.next` | Walkthrough: Next Step | `Alt+]` while playing |
+| `agent-walkthrough.back` | Walkthrough: Previous Step | `Alt+[` while playing |
+| `agent-walkthrough.goto` | Walkthrough: Go to Step… | — |
+| `agent-walkthrough.close` | Walkthrough: Close | — |
 
 **Player behaviour**
 
 - Position 0 is the overview (title + summary); positions 1…N are steps.
 - On entering a step: open the file, resolve the range (§5.2.1), select nothing,
   reveal the range centred, and decorate those lines (whole-line background +
-  gutter bar, theme colour `walkmethrough.stepHighlight`).
+  gutter bar, theme colour `agent-walkthrough.stepHighlight`).
 - A webview view **Walkthrough** (Explorer sidebar) shows: title, "Step k of N",
   step title, rendered `why`, file:lines link, a warning banner when the anchor
   was relocated or not found, and **Back / Next** buttons.
 - The same explanation also appears in the editor, directly below the step's
-  lines, as a read-only comment thread (controller `walkmethrough`, context value
-  `walkmethrough.step`): label "Step k of N", the step title as author, rendered
+  lines, as a read-only comment thread (controller `agent-walkthrough`, context value
+  `agent-walkthrough.step`): label "Step k of N", the step title as author, rendered
   `why` and the relocation warning, with Back / Next / Close in its header. One
   thread exists at a time; none on the overview or when the file is missing.
-  Setting `walkmethrough.inlineExplanation` (default `true`) turns it off. The
-  body is the §5.2.2 HTML with step links rewritten to `command:walkmethrough.goto`
+  Setting `agent-walkthrough.inlineExplanation` (default `true`) turns it off. The
+  body is the §5.2.2 HTML with step links rewritten to `command:agent-walkthrough.goto`
   URIs; the `MarkdownString` trusts only that command.
 - A status-bar item shows `$(book) k/N`; clicking it runs Next.
-- The context key `walkmethrough.playing` is true while a walkthrough is open.
+- The context key `agent-walkthrough.playing` is true while a walkthrough is open.
 - A file that fails validation opens nothing and shows every error with its
   YAML path (e.g. `steps[2].lines: end (4) is before start (9)`).
 - The file watcher reloads the walkthrough if it changes on disk, keeping the
@@ -250,7 +250,7 @@ unit-tested:
 
 ### 5.3 Comments and feedback (roadmap step 4)
 
-- A `CommentController` (`walkmethrough`) lets reviewers start a thread on any
+- A `CommentController` (`agent-walkthrough`) lets reviewers start a thread on any
   line range in any file while a walkthrough is open; the active step's range
   is offered as the default (**Comment on Step**: a button in the step's inline
   thread header and in the panel). Every comment belongs to the open walkthrough and
@@ -286,7 +286,7 @@ unit-tested:
   anchor (§5.2.1) in the file on disk in worktree mode.
 - Uncovered ranges are shown in a **Not in Walkthrough** view (Explorer, only
   while a walkthrough is open; clicking a range opens it) and as a dotted gutter
-  marker (theme colour `walkmethrough.uncoveredGutter`); the panel's overview
+  marker (theme colour `agent-walkthrough.uncoveredGutter`); the panel's overview
   shows `Coverage: covered / changed lines`.
 - Deleted-only hunks are listed under **Removed code**, unless they sit right
   before, inside or right after a step's range (that step is taken to explain them).
@@ -316,7 +316,7 @@ schema/                      JSON Schemas for both files (normative)
 examples/                    hand-made walkthroughs over a tiny sample app
 skills/walkthrough/SKILL.md  the agent skill
 .claude-plugin/              Claude Code plugin marketplace (marketplace.json)
-plugins/walkmethrough-stop-hook/  optional Claude Code Stop hook, as a plugin
+plugins/agent-walkthrough-stop-hook/  optional Claude Code Stop hook, as a plugin
 extension/                   VS Code extension (TypeScript)
   src/core/                  pure logic, no `vscode` import (unit-tested with node:test)
   src/                       VS Code glue: player, panel, commands
@@ -365,7 +365,7 @@ is what we took, what we deferred, and what we left out.
 | From | Idea | Why not yet |
 |------|------|-------------|
 | Fork ADR 0007 | Mermaid diagrams in `summary`, rendered and validated locally. | Useful for the architecture summary, but it adds a large dependency and needs its own sanitisation rules. |
-| CodeTour Watch (CI) | Fail CI when a tour drifts from the code. | Our anchor logic is pure, so a `walkmethrough check` CLI is cheap later. Walkthroughs are per-session review aids, not long-lived docs, so drift matters less. |
+| CodeTour Watch (CI) | Fail CI when a tour drifts from the code. | Our anchor logic is pure, so an `agent-walkthrough check` CLI is cheap later. Walkthroughs are per-session review aids, not long-lived docs, so drift matters less. |
 | CodeTour tour markers | Gutter icon on lines that belong to a step, even when no walkthrough is playing. | Overlaps the coverage-check gutter (§5.4); decide after that ships. |
 | CodeTour content steps | Steps with no file, e.g. "what I deliberately didn't change". | `summary` covers the intro case. Revisit if agents need to explain deletions or non-changes; `base_commit` could show deleted code the same way `head_commit` shows drifted code. |
 

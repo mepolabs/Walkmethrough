@@ -5,7 +5,7 @@ import { renderMarkdownForEditor } from "./core/markdown";
 import { STATUS_NOTE } from "./panel";
 import { Player } from "./player";
 
-const SETTING = "walkmethrough.inlineExplanation";
+const SETTING = "agent-walkthrough.inlineExplanation";
 
 function escape(s: string): string {
   return s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -48,19 +48,19 @@ export class InlineStep implements vscode.Disposable {
     if (!vscode.workspace.getConfiguration().get<boolean>(SETTING, true)) return;
 
     // Agent-written text: sanitised HTML (spec §5.2.2), and the only command it may run is goto.
-    let html = renderMarkdownForEditor(step.why, "walkmethrough.goto");
+    let html = renderMarkdownForEditor(step.why, "agent-walkthrough.goto");
     const note = STATUS_NOTE[view.range.status];
     if (note) html += `<p><em>⚠ ${escape(note)}</em></p>`;
     const body = new vscode.MarkdownString(html);
     body.supportHtml = true;
-    body.isTrusted = { enabledCommands: ["walkmethrough.goto"] };
+    body.isTrusted = { enabledCommands: ["agent-walkthrough.goto"] };
 
     const range = new vscode.Range(view.range.start - 1, 0, view.range.end - 1, 0);
     const thread = this.controller.createCommentThread(view.uri, range, [
       { body, mode: vscode.CommentMode.Preview, author: { name: step.title } },
     ]);
     thread.label = `Step ${session.position} of ${session.stepCount}`;
-    thread.contextValue = "walkmethrough.step";
+    thread.contextValue = "agent-walkthrough.step";
     thread.canReply = false;
     thread.collapsibleState = vscode.CommentThreadCollapsibleState.Expanded;
     this.current = thread;

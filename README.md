@@ -1,11 +1,11 @@
-# Walkmethrough
+# Agent Walkthrough
 
 **Code walkthroughs written by your coding agent, played back step by step in
 VS Code, with review comments that go back to the agent.**
 
 A coding-agent session changes a lot of code at once. Reading the diff file by
 file doesn't tell you how the pieces fit together or why they were written that
-way. Walkmethrough asks the agent to explain its own change:
+way. Agent Walkthrough asks the agent to explain its own change:
 
 1. At the end of a session, the agent (Claude Code, Codex, GitHub Copilot, Cursor)
    writes `.walkthrough/<session>.yaml`: the changed code **in execution order**
@@ -39,11 +39,11 @@ There are two parts: the **VS Code extension** (for you, the reviewer) and the
 Build the `.vsix` package and install it:
 
 ```sh
-git clone https://github.com/mepolabs/walkmethrough.git
-cd walkmethrough/extension
+git clone https://github.com/mepolabs/agent-walkthrough.git
+cd agent-walkthrough/extension
 npm ci
-npm run package                       # creates walkmethrough-<version>.vsix
-code --install-extension walkmethrough-0.1.0.vsix
+npm run package                       # creates agent-walkthrough-<version>.vsix
+code --install-extension agent-walkthrough-0.1.0.vsix
 ```
 
 Or, in VS Code: **Extensions** view → **⋯** → **Install from VSIX…** and pick the file.
@@ -58,12 +58,12 @@ a **new** agent session, because running sessions don't pick up new skills.
 #### Claude Code: plugin marketplace (recommended)
 
 ```sh
-claude plugin marketplace add mepolabs/walkmethrough
-claude plugin install walkmethrough@walkmethrough
+claude plugin marketplace add mepolabs/agent-walkthrough
+claude plugin install agent-walkthrough@agent-walkthrough
 ```
 
-Or, inside a Claude Code session: `/plugin marketplace add mepolabs/walkmethrough`,
-then `/plugin install walkmethrough@walkmethrough`.
+Or, inside a Claude Code session: `/plugin marketplace add mepolabs/agent-walkthrough`,
+then `/plugin install agent-walkthrough@agent-walkthrough`.
 
 This installs the skill for you in every repository. To share it with your team
 instead, add `--scope project` to both commands. That records the marketplace
@@ -76,7 +76,7 @@ session that changed code, also install the Stop hook. Install it per project,
 so it doesn't apply to every repository on your machine:
 
 ```sh
-claude plugin install walkmethrough-stop-hook@walkmethrough --scope project
+claude plugin install agent-walkthrough-stop-hook@agent-walkthrough --scope project
 ```
 
 The hook only looks at uncommitted changes and never blocks twice in a row, so
@@ -87,7 +87,7 @@ it can't loop.
 With [GitHub CLI](https://cli.github.com/) 2.90 or later:
 
 ```sh
-gh skill install mepolabs/walkmethrough walkthrough
+gh skill install mepolabs/agent-walkthrough walkthrough
 ```
 
 This puts the skill in `.agents/skills/walkthrough/`, which Copilot reads, and
@@ -100,7 +100,7 @@ The [`skills`](https://github.com/vercel-labs/skills) CLI installs for Claude
 Code, Copilot, Codex, Cursor and many other agents in one go (needs Node.js):
 
 ```sh
-npx skills add mepolabs/walkmethrough --skill walkthrough -a claude-code -a github-copilot --copy
+npx skills add mepolabs/agent-walkthrough --skill walkthrough -a claude-code -a github-copilot --copy
 ```
 
 This writes `.agents/skills/walkthrough/`, used by Copilot, Codex and Cursor,
@@ -115,7 +115,7 @@ The skill is one folder, [`skills/walkthrough/`](skills/walkthrough/). Copy it t
 `.agents/skills/walkthrough/` (Copilot, Codex, Cursor) and/or
 `.claude/skills/walkthrough/` (Claude Code) in your repository. The Stop hook
 for Claude Code is
-[`plugins/walkmethrough-stop-hook/scripts/require-walkthrough.mjs`](plugins/walkmethrough-stop-hook/scripts/require-walkthrough.mjs);
+[`plugins/agent-walkthrough-stop-hook/scripts/require-walkthrough.mjs`](plugins/agent-walkthrough-stop-hook/scripts/require-walkthrough.mjs);
 the comment at its top shows how to register it in `.claude/settings.json`.
 
 ## Use it
@@ -163,10 +163,10 @@ review aids for one change, not long-lived documentation.
 
 | Setting | Default | |
 |---------|---------|---|
-| `walkmethrough.inlineExplanation` | `true` | Show each step's explanation in the editor below its lines, as well as in the side panel. |
+| `agent-walkthrough.inlineExplanation` | `true` | Show each step's explanation in the editor below its lines, as well as in the side panel. |
 
-Colours can be themed with `walkmethrough.stepHighlight`, `walkmethrough.stepGutter`
-and `walkmethrough.uncoveredGutter` in `workbench.colorCustomizations`.
+Colours can be themed with `agent-walkthrough.stepHighlight`, `agent-walkthrough.stepGutter`
+and `agent-walkthrough.uncoveredGutter` in `workbench.colorCustomizations`.
 
 ## The files
 
@@ -212,7 +212,7 @@ request, so the extension treats their text as untrusted: no raw HTML or images,
 links only to web pages (`http(s)://`, which VS Code asks before opening) or to other steps, and
 nothing in a walkthrough can run a command. Details are in
 [spec §5.2.2](spec.md#522-rendering-untrusted-text). To report a vulnerability,
-please use [GitHub's private vulnerability reporting](https://github.com/mepolabs/walkmethrough/security/advisories/new)
+please use [GitHub's private vulnerability reporting](https://github.com/mepolabs/agent-walkthrough/security/advisories/new)
 rather than a public issue.
 
 ## Contributing

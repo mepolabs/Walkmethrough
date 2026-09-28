@@ -1,4 +1,4 @@
-# Contributing to Walkmethrough
+# Contributing to Agent Walkthrough
 
 Thanks for helping. Bug reports, ideas and pull requests are all welcome.
 
@@ -11,7 +11,7 @@ Thanks for helping. Bug reports, ideas and pull requests are all welcome.
   contract with every agent that writes them, so changes go through the
   [specification](spec.md) before the code.
 - **Security issues:** don't open a public issue; use
-  [private vulnerability reporting](https://github.com/mepolabs/walkmethrough/security/advisories/new).
+  [private vulnerability reporting](https://github.com/mepolabs/agent-walkthrough/security/advisories/new).
 
 ## Repository layout
 
@@ -21,7 +21,7 @@ Thanks for helping. Bug reports, ideas and pull requests are all welcome.
 | [`schema/`](schema/) | JSON Schemas for the walkthrough and feedback files; the normative format |
 | [`skills/walkthrough/SKILL.md`](skills/walkthrough/SKILL.md) | The agent skill: how agents write walkthroughs and apply feedback. Kept at `skills/<name>/SKILL.md` so `gh skill`, `npx skills` and Claude Code all find it |
 | [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) | Makes this repository a Claude Code plugin marketplace |
-| [`plugins/walkmethrough-stop-hook/`](plugins/walkmethrough-stop-hook/) | Optional Claude Code `Stop` hook, as its own plugin |
+| [`plugins/agent-walkthrough-stop-hook/`](plugins/agent-walkthrough-stop-hook/) | Optional Claude Code `Stop` hook, as its own plugin |
 | [`extension/`](extension/) | The VS Code extension (TypeScript) |
 | [`examples/order-api/`](examples/order-api/) | A small sample app with hand-written walkthroughs; used by the tests |
 
@@ -44,7 +44,7 @@ npm ci
 npm run typecheck
 npm test                  # unit tests (node:test), including git runs in a temp repo
 npm run test:integration  # downloads a test VS Code and runs it on examples/order-api
-npm run package           # builds walkmethrough-<version>.vsix
+npm run package           # builds agent-walkthrough-<version>.vsix
 ```
 
 The integration tests download VS Code into `extension/.vscode-test/` the
@@ -62,12 +62,12 @@ npx skills add . --list                                   # what `npx skills` fi
 ```
 
 To install your working copy into Claude Code, run
-`claude plugin marketplace add /path/to/walkmethrough` and
-`claude plugin install walkmethrough@walkmethrough`. Afterwards, remove it with
-`claude plugin marketplace remove walkmethrough`.
+`claude plugin marketplace add /path/to/agent-walkthrough` and
+`claude plugin install agent-walkthrough@agent-walkthrough`. Afterwards, remove it with
+`claude plugin marketplace remove agent-walkthrough`.
 
 When you change the skill or the hook, bump `version` in
-`.claude-plugin/marketplace.json` (and in `plugins/walkmethrough-stop-hook/.claude-plugin/plugin.json`
+`.claude-plugin/marketplace.json` (and in `plugins/agent-walkthrough-stop-hook/.claude-plugin/plugin.json`
 for the hook) so Claude Code users receive the update.
 
 ## Run the extension from source
@@ -80,7 +80,7 @@ loaded. Run **Walkthrough: Open…** there. After changing the code, run
 To try it on another repository:
 
 ```sh
-code --extensionDevelopmentPath=/path/to/walkmethrough/extension /path/to/other-repo
+code --extensionDevelopmentPath=/path/to/agent-walkthrough/extension /path/to/other-repo
 ```
 
 ## Pull requests
