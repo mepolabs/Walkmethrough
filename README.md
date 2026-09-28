@@ -1,5 +1,8 @@
 # Agent Walkthrough
 
+[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/mepolabs.agent-walkthrough?label=VS%20Code%20Marketplace)](https://marketplace.visualstudio.com/items?itemName=mepolabs.agent-walkthrough)
+[![Open VSX](https://img.shields.io/open-vsx/v/mepolabs/agent-walkthrough?label=Open%20VSX)](https://open-vsx.org/extension/mepolabs/agent-walkthrough)
+
 **See how your coding agent's change actually works, step by step in VS Code,
 and send comments straight back to the agent.**
 
@@ -30,8 +33,7 @@ the code.
    walkthrough didn't explain.
 
 > **Status:** early (v0.1). Writing and reviewing walkthroughs works end to
-> end. The extension isn't on the Marketplace yet, so for now you install it
-> from a downloaded file (below).
+> end.
 
 ## Install
 
@@ -39,12 +41,37 @@ You'll need:
 
 - **VS Code** 1.90+ (or a compatible fork, such as Cursor)
 - **git**, so the coverage check can work
-- **Node.js 18+**, to build the extension
 - A coding agent: **Claude Code**, **Codex**, **GitHub Copilot**, or **Cursor**
 
 ### 1. Install the VS Code extension
 
-It isn't on the Marketplace yet, so build the install file and add it yourself:
+Install **Agent Walkthrough** from the
+[VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=mepolabs.agent-walkthrough):
+open the **Extensions** view, search for `Agent Walkthrough`, and click
+**Install**. Or from a terminal:
+
+```sh
+code --install-extension mepolabs.agent-walkthrough
+```
+
+<details>
+<summary><strong>Cursor, VSCodium, Windsurf, or another VS Code fork</strong></summary>
+
+These editors install extensions from
+[Open VSX](https://open-vsx.org/extension/mepolabs/agent-walkthrough) instead.
+Search for `Agent Walkthrough` in the **Extensions** view and click
+**Install**, or from a terminal:
+
+```sh
+cursor --install-extension mepolabs.agent-walkthrough
+```
+
+</details>
+
+<details>
+<summary><strong>Building from source</strong></summary>
+
+Needs Node.js 18+.
 
 ```sh
 git clone https://github.com/mepolabs/agent-walkthrough.git
@@ -54,9 +81,7 @@ npm run package
 code --install-extension agent-walkthrough-0.1.0.vsix
 ```
 
-Or, in VS Code: **Extensions** view → **⋯** → **Install from VSIX…**, and pick
-the file `npm run package` created. In Cursor, use `cursor --install-extension`
-or the same menu.
+</details>
 
 ### 2. Add the skill to your project
 
@@ -187,8 +212,7 @@ steps:
 ```
 
 Comments you leave are saved next to it, in `.walkthrough/<session>.feedback.yaml`.
-Both files have a JSON Schema in [`schema/`](schema/), and the full format is
-documented in the [specification](spec.md).
+Both formats are defined by the JSON Schemas in [`schema/`](schema/).
 
 </details>
 
