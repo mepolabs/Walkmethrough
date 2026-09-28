@@ -29,7 +29,7 @@ review.
 
 1. Add the agent skill to your repository. The skill is the part that makes
    your agent write walkthroughs. See the
-   [install guide](https://github.com/mepolabs/agent-walkthrough#2-the-agent-skill).
+   [install guide](https://github.com/mepolabs/agent-walkthrough#2-add-the-skill-to-your-project).
 2. Let your agent finish a change, or ask it to "write a walkthrough".
 3. Run **Walkthrough: Open…** and pick the walkthrough.
 
