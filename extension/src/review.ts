@@ -62,7 +62,6 @@ export class ReviewComments implements vscode.Disposable {
   constructor(
     private readonly controller: vscode.CommentController,
     private readonly player: Player,
-    private readonly root: vscode.Uri,
   ) {
     this.setCommentingRanges();
     this.subscriptions = [player.onDidChange(() => this.follow())];
@@ -121,7 +120,7 @@ export class ReviewComments implements vscode.Disposable {
     const entry: FeedbackEntry = {
       id: newEntryId(now),
       step: this.stepAt(thread.uri, start, end),
-      file: vscode.workspace.asRelativePath(thread.uri, false),
+      file: this.player.relative(thread.uri) ?? vscode.workspace.asRelativePath(thread.uri, false),
       lines: [start, end],
       anchor: doc.lineAt(start - 1).text.trim() || undefined,
       comment: text,
@@ -239,14 +238,14 @@ export class ReviewComments implements vscode.Disposable {
     this.feedback = undefined;
   }
 
-  /** The + gutter is offered on workspace files only while a walkthrough is open. */
+  /** The + gutter is offered on the open walkthrough's project files only. */
   private setCommentingRanges(): void {
     // Reassigning the provider makes VS Code ask again for already open editors.
     this.controller.commentingRangeProvider = {
       provideCommentingRanges: (doc) => {
         if (!this.feedback || doc.uri.scheme !== "file") return [];
-        const rel = vscode.workspace.asRelativePath(doc.uri, false);
-        if (rel === doc.uri.fsPath || rel.startsWith(".walkthrough/")) return [];
+        const rel = this.player.relative(doc.uri);
+        if (!rel || rel.startsWith(".walkthrough/")) return [];
         return [new vscode.Range(0, 0, Math.max(0, doc.lineCount - 1), 0)];
       },
     };
@@ -295,9 +294,10 @@ export class ReviewComments implements vscode.Disposable {
         continue;
       }
       const range = await this.locate(entry);
-      if (!range) continue; // file is gone; the entry still counts for Copy to chat
+      const uri = this.uri(entry);
+      if (!range || !uri) continue; // file is gone; the entry still counts for Copy to chat
       const created = this.controller.createCommentThread(
-        vscode.Uri.joinPath(this.root, entry.file),
+        uri,
         toRange(range.start, range.end),
         [],
       );
@@ -326,10 +326,18 @@ export class ReviewComments implements vscode.Disposable {
     thread.comments = [...thread.comments];
   }
 
+  /** An entry's file, in the open walkthrough's project. */
+  private uri(entry: FeedbackEntry): vscode.Uri | undefined {
+    const root = this.player.root;
+    return root && vscode.Uri.joinPath(root, entry.file);
+  }
+
   /** Where an entry's lines are now, following its anchor; undefined if the file is gone. */
   private async locate(entry: FeedbackEntry) {
+    const uri = this.uri(entry);
+    if (!uri) return undefined;
     try {
-      const doc = await vscode.workspace.openTextDocument(vscode.Uri.joinPath(this.root, entry.file));
+      const doc = await vscode.workspace.openTextDocument(uri);
       return resolveRange(doc.getText(), entry.lines, entry.anchor);
     } catch {
       return undefined;

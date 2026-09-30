@@ -1,6 +1,7 @@
 // Drives the editor: opens each step's file, resolves and highlights its lines.
 import * as vscode from "vscode";
 import { ResolvedRange, resolveRange } from "./core/anchor";
+import { projectRootOf, relativeTo } from "./core/paths";
 import { Session } from "./core/session";
 import { parseWalkthrough } from "./core/walkthrough";
 
@@ -12,6 +13,7 @@ export type StepView =
 export class Player implements vscode.Disposable {
   private session: Session | undefined;
   private opened: vscode.Uri | undefined;
+  private project: vscode.Uri | undefined;
   private current: StepView = { kind: "overview" };
   private watcher: vscode.FileSystemWatcher | undefined;
   private readonly changed = new vscode.EventEmitter<void>();
@@ -27,8 +29,6 @@ export class Player implements vscode.Disposable {
     overviewRulerLane: vscode.OverviewRulerLane.Left,
   });
 
-  constructor(private readonly root: vscode.Uri) {}
-
   get active(): Session | undefined {
     return this.session;
   }
@@ -38,8 +38,22 @@ export class Player implements vscode.Disposable {
     return this.opened;
   }
 
+  /**
+   * The open walkthrough's project: the folder holding its `.walkthrough/`.
+   * Step paths, feedback paths and the coverage check are all relative to it.
+   */
+  get root(): vscode.Uri | undefined {
+    return this.project;
+  }
+
   get view(): StepView {
     return this.current;
+  }
+
+  /** `uri`'s path relative to the open walkthrough's project; undefined if outside it or none is open. */
+  relative(uri: vscode.Uri): string | undefined {
+    if (!this.project || uri.scheme !== this.project.scheme || uri.authority !== this.project.authority) return undefined;
+    return relativeTo(this.project.path, uri.path);
   }
 
   /** Loads and validates a walkthrough file; shows errors and returns false on failure. */
@@ -47,8 +61,9 @@ export class Player implements vscode.Disposable {
     const parsed = await this.read(file);
     if (!parsed) return false;
     this.close();
-    this.session = new Session(parsed, vscode.workspace.asRelativePath(file, false));
+    this.project = file.with({ path: projectRootOf(file.path) });
     this.opened = file;
+    this.session = new Session(parsed, this.relative(file)!);
     this.watch(file);
     await vscode.commands.executeCommand("setContext", "agent-walkthrough.playing", true);
     await this.show();
@@ -74,6 +89,7 @@ export class Player implements vscode.Disposable {
     this.watcher = undefined;
     this.session = undefined;
     this.opened = undefined;
+    this.project = undefined;
     this.current = { kind: "overview" };
     for (const editor of vscode.window.visibleTextEditors) editor.setDecorations(this.highlight, []);
     void vscode.commands.executeCommand("setContext", "agent-walkthrough.playing", false);
@@ -123,14 +139,15 @@ export class Player implements vscode.Disposable {
   /** Renders the current position in the editor and notifies the panel. */
   private async show(): Promise<void> {
     const step = this.session?.step;
+    const root = this.project;
     for (const editor of vscode.window.visibleTextEditors) editor.setDecorations(this.highlight, []);
-    if (!step) {
+    if (!step || !root) {
       this.current = { kind: "overview" };
       this.changed.fire();
       return;
     }
 
-    const uri = vscode.Uri.joinPath(this.root, step.file);
+    const uri = vscode.Uri.joinPath(root, step.file);
     let doc: vscode.TextDocument;
     try {
       doc = await vscode.workspace.openTextDocument(uri);

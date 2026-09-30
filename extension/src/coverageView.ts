@@ -66,7 +66,6 @@ export class CoverageCheck implements vscode.TreeDataProvider<CoverageNode>, vsc
 
   constructor(
     private readonly player: Player,
-    private readonly root: vscode.Uri,
   ) {
     this.view = vscode.window.createTreeView(CoverageCheck.viewId, { treeDataProvider: this });
     this.subscriptions = [
@@ -103,12 +102,13 @@ export class CoverageCheck implements vscode.TreeDataProvider<CoverageNode>, vsc
   /** Re-runs the check (the view's refresh button, and after files change). */
   async refresh(): Promise<void> {
     const wt = this.walkthrough;
-    if (!wt) return;
+    const root = this.player.root;
+    if (!wt || !root) return;
     const gen = ++this.generation;
     if (this.state.kind !== "done") this.set({ kind: "running" }); // keep old results on screen meanwhile
     let next: CoverageState;
     try {
-      const changes = await collectChanges(this.root.fsPath, wt.base_commit, wt.head_commit);
+      const changes = await collectChanges(root.fsPath, wt.base_commit, wt.head_commit);
       const steps = await this.stepRanges(wt, changes.mode);
       if (changes.diffs.length === 0) {
         next = {
@@ -204,13 +204,14 @@ export class CoverageCheck implements vscode.TreeDataProvider<CoverageNode>, vsc
     clearTimeout(this.timer);
     this.watcher?.dispose();
     this.watcher = undefined;
-    if (!wt) return this.set({ kind: "off" });
+    const root = this.player.root;
+    if (!wt || !root) return this.set({ kind: "off" });
 
     // Only the working tree can change the answer; base..head is fixed.
     if (!wt.head_commit) {
-      this.watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(this.root, "**/*"));
+      this.watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(root, "**/*"));
       const soon = (uri: vscode.Uri) => {
-        const rel = vscode.workspace.asRelativePath(uri, false);
+        const rel = this.player.relative(uri) ?? "";
         if (rel.startsWith(".git/") || rel.startsWith(".walkthrough/")) return;
         clearTimeout(this.timer);
         this.timer = setTimeout(() => void this.refresh(), 1000);
@@ -256,7 +257,8 @@ export class CoverageCheck implements vscode.TreeDataProvider<CoverageNode>, vsc
     const byFile = new Map<string, LineRange[]>();
     if (s.kind === "done") for (const u of s.coverage.uncovered) byFile.set(u.file, u.ranges);
     for (const editor of vscode.window.visibleTextEditors) {
-      const ranges = byFile.get(vscode.workspace.asRelativePath(editor.document.uri, false)) ?? [];
+      const rel = this.player.relative(editor.document.uri);
+      const ranges = (rel !== undefined && byFile.get(rel)) || [];
       editor.setDecorations(
         this.marker,
         ranges.map(([a, b]) => ({
@@ -311,8 +313,9 @@ export class CoverageCheck implements vscode.TreeDataProvider<CoverageNode>, vsc
     return out;
   }
 
+  /** A path from the diff or a step, in the open walkthrough's project. */
   private uri(file: string): vscode.Uri {
-    return vscode.Uri.joinPath(this.root, file);
+    return vscode.Uri.joinPath(this.player.root ?? vscode.Uri.file("/"), file);
   }
 
   private open(file: string, start: number, end: number): vscode.Command {

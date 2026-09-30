@@ -139,7 +139,9 @@ It only looks at uncommitted changes and never interrupts twice in a row.
 1. Let your agent finish a change, or ask it to *"write a walkthrough."*
 2. Open the **Walkthrough** view in the Explorer sidebar, or run
    **Walkthrough: Open…** from the Command Palette, and pick the walkthrough
-   (the newest one is listed first).
+   (the newest one is listed first). The list covers every folder of a
+   multi-root workspace and every project in a monorepo, grouped by project.
+   To switch later, click **Switch walkthrough…** in the Walkthrough view.
 3. Step through with the **Next** / **Back** buttons, or **Alt+]** / **Alt+[**.
 4. Hover a line number and click **+** to comment on it, or click 💬 in a
    step's header to comment on the whole step, just like reviewing a pull
