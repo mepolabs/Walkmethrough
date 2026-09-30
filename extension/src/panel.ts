@@ -116,6 +116,7 @@ export class Panel implements vscode.WebviewViewProvider, vscode.Disposable {
     const copy = count
       ? `<a data-msg="copy" title="Copy the open comments for your agent's chat">Copy feedback to chat (${count})</a>`
       : "";
+    const swap = `<a data-msg="open" title="Open a different walkthrough, from any project in the workspace">Switch walkthrough…</a>`;
     const nav = `<div class="nav">
   <button class="secondary" data-msg="back" ${session.canGoBack ? "" : "disabled"}>Back</button>
   <button data-msg="next" ${session.canGoNext ? "" : "disabled"}>${session.position === 0 ? "Start" : "Next"}</button>
@@ -127,7 +128,7 @@ export class Panel implements vscode.WebviewViewProvider, vscode.Disposable {
 <h2>${escape(wt.title)}</h2>
 <div class="md">${wt.summary ? renderMarkdown(wt.summary) : ""}</div>
 ${this.coverageLine()}
-${copy ? `<div class="actions">${copy}</div>` : ""}
+<div class="actions">${copy}${swap}</div>
 ${nav}`;
     }
 
@@ -147,7 +148,7 @@ ${nav}`;
 <a class="loc" data-msg="reveal" title="Show in editor">${location}</a>
 ${note}
 <div class="md">${renderMarkdown(step.why)}</div>
-<div class="actions">${view.kind === "step" ? `<a data-msg="comment">Comment on this step</a>` : ""}${copy}</div>
+<div class="actions">${view.kind === "step" ? `<a data-msg="comment">Comment on this step</a>` : ""}${copy}${swap}</div>
 ${nav}`;
   }
 

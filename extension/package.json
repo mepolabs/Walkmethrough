@@ -32,7 +32,8 @@
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
-    "workspaceContains:.walkthrough/*.{yaml,yml}"
+    "workspaceContains:.walkthrough/*.{yaml,yml}",
+    "workspaceContains:**/.walkthrough/*.{yaml,yml}"
   ],
   "contributes": {
     "commands": [
@@ -41,6 +42,11 @@
         "title": "Open…",
         "category": "Walkthrough",
         "icon": "$(book)"
+      },
+      {
+        "command": "agent-walkthrough.openFile",
+        "title": "Open Walkthrough",
+        "category": "Walkthrough"
       },
       {
         "command": "agent-walkthrough.next",
@@ -176,6 +182,13 @@
           "group": "navigation"
         }
       ],
+      "explorer/context": [
+        {
+          "command": "agent-walkthrough.openFile",
+          "when": "resourceDirname =~ /[\\\\/]\\.walkthrough$/ && resourceFilename =~ /\\.ya?ml$/ && !(resourceFilename =~ /\\.feedback\\.ya?ml$/)",
+          "group": "navigation@100"
+        }
+      ],
       "comments/commentThread/title": [
         {
           "command": "agent-walkthrough.commentOnStep",
@@ -235,6 +248,10 @@
         }
       ],
       "commandPalette": [
+        {
+          "command": "agent-walkthrough.openFile",
+          "when": "false"
+        },
         {
           "command": "agent-walkthrough.comment.create",
           "when": "false"

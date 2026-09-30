@@ -31,7 +31,14 @@ review.
    your agent write walkthroughs. See the
    [install guide](https://github.com/mepolabs/agent-walkthrough#2-add-the-skill-to-your-project).
 2. Let your agent finish a change, or ask it to "write a walkthrough".
-3. Run **Walkthrough: Open…** and pick the walkthrough.
+3. Run **Walkthrough: Open…** and pick the walkthrough. To switch to another
+   one later, click **Switch walkthrough…** in the Walkthrough view, or
+   right-click a file in `.walkthrough/` and choose **Open Walkthrough**.
+
+Walkthroughs are found in every folder of a multi-root workspace, and in
+projects nested inside a folder (such as a monorepo with a `.walkthrough/` per
+project). Each one plays against its own project: the folder that holds its
+`.walkthrough/`.
 
 The extension activates in workspaces that contain `.walkthrough/*.yaml`.
 The coverage check needs `git` on your `PATH`.
