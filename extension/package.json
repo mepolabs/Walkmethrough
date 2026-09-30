@@ -2,7 +2,7 @@
   "name": "agent-walkthrough",
   "displayName": "Agent Walkthrough",
   "description": "Play back agent-written code walkthroughs step by step and send review comments back to the agent.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "mepolabs",
   "license": "MIT",
   "icon": "images/icon.png",
