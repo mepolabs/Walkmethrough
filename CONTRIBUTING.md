@@ -132,20 +132,20 @@ no token to store. It's free and needs no Azure subscription.
    **Application (client) ID** (not its Object ID) and `AZURE_TENANT_ID` its
    **Directory (tenant) ID**. A new credential can also take a few minutes to
    start working.
-4. Get the app's Marketplace profile ID. Either run the release workflow once
-   (the Marketplace job fails, but its **Show the app's Marketplace profile ID**
+4. Get the app's Marketplace member ID. Either run the release workflow once
+   (the Marketplace job fails, but its **Show the app's Marketplace member ID**
    step prints the ID), or, with the Azure CLI and a temporary client secret
    from **Certificates & secrets**:
 
    ```sh
    az login --service-principal --username <client-id> --password <secret> --tenant <tenant-id> --allow-no-subscriptions
-   az rest --url https://app.vssps.visualstudio.com/_apis/profile/profiles/me \
-     --resource 499b84ac-1321-427f-aa17-267ca6975798 --query id --output tsv
+   az rest --url https://app.vssps.visualstudio.com/_apis/connectionData \
+     --resource 499b84ac-1321-427f-aa17-267ca6975798 --query authenticatedUser.id --output tsv
    ```
 
    Delete the temporary secret afterwards.
 5. On the [Marketplace publisher page](https://marketplace.visualstudio.com/manage/publishers/mepolabs),
-   open **Members → Add**, paste the profile ID, and give it the **Contributor**
+   open **Members → Add**, paste the member ID, and give it the **Contributor**
    role. Then re-run the failed Marketplace job if you used the workflow in step 4.
 
 **Open VSX.** Sign in at [open-vsx.org](https://open-vsx.org) with GitHub,
