@@ -119,17 +119,19 @@ no token to store. It's free and needs no Azure subscription.
 2. From its **Overview**, save the **Application (client) ID** as the
    `AZURE_CLIENT_ID` secret and the **Directory (tenant) ID** as `AZURE_TENANT_ID`.
 3. In the app, open **Certificates & secrets → Federated credentials → Add
-   credential**, choose **Other issuer**, and enter:
-   - **Issuer:** `https://token.actions.githubusercontent.com`
-   - **Subject identifier:** `repo:mepolabs@320705755/agent-walkthrough@1390975784:ref:refs/heads/main`
-   - **Audience:** `api://AzureADTokenExchange` (the default)
+   credential** and choose **GitHub Actions deploying Azure resources**. Enter
+   organization `mepolabs` (ID `320705755`), repository `agent-walkthrough`
+   (ID `1390975784`), entity type **Branch**, branch `main`, and any name. The
+   **Subject identifier** should read
+   `repo:mepolabs@320705755/agent-walkthrough@1390975784:ref:refs/heads/main`,
+   which is what GitHub sends; leave the audience as `api://AzureADTokenExchange`.
 
-   Give it any name and add it. The subject must match what GitHub sends
-   character for character. This repository's includes the owner's and the
-   repository's numeric IDs, which the **GitHub Actions deploying Azure
-   resources** template leaves out, so that template doesn't match. If sign-in
-   fails with `AADSTS700213`, copy the `subject claim` that the **azure/login**
-   step prints into the credential.
+   If sign-in fails with `AADSTS700213` although the subject matches the
+   `subject claim` the **azure/login** step prints, the workflow is signing in
+   as a different app: check that `AZURE_CLIENT_ID` is this app's
+   **Application (client) ID** (not its Object ID) and `AZURE_TENANT_ID` its
+   **Directory (tenant) ID**. A new credential can also take a few minutes to
+   start working.
 4. Get the app's Marketplace profile ID. Either run the release workflow once
    (the Marketplace job fails, but its **Show the app's Marketplace profile ID**
    step prints the ID), or, with the Azure CLI and a temporary client secret
