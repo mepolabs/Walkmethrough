@@ -82,6 +82,33 @@ To try it on another repository:
 code --extensionDevelopmentPath=/path/to/agent-walkthrough/extension /path/to/other-repo
 ```
 
+## Releasing the extension
+
+Merging to `main` runs [`.github/workflows/release.yml`](.github/workflows/release.yml).
+It always runs the tests. If the `version` in `extension/package.json` has no
+`v<version>` tag yet, it also packages one `.vsix`, publishes it to the
+[VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=mepolabs.agent-walkthrough)
+and [Open VSX](https://open-vsx.org/extension/mepolabs/agent-walkthrough), and
+creates a GitHub release with the tag, the `.vsix` and that version's
+`CHANGELOG.md` section.
+
+So to release, in your pull request:
+
+1. Bump the version: `cd extension && npm version <x.y.z> --no-git-tag-version`
+   (this updates `package-lock.json` too).
+2. Add a `## <x.y.z>` section to `extension/CHANGELOG.md`.
+
+Pull requests that don't bump the version are tested but not released. If a
+store rejects the upload, fix the cause and re-run the failed job from the
+Actions tab: the version isn't tagged until both stores have it.
+
+The workflow needs two repository secrets (**Settings → Secrets and variables → Actions**):
+
+- `VSCE_PAT`: an Azure DevOps personal access token with the **Marketplace (Manage)**
+  scope, from an account that can publish as `mepolabs`.
+- `OVSX_PAT`: an [Open VSX access token](https://open-vsx.org/user-settings/tokens)
+  from an account that's a member of the `mepolabs` namespace.
+
 ## Pull requests
 
 - Keep each pull request to one change, and describe what it does and why.
