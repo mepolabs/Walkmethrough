@@ -102,12 +102,46 @@ Pull requests that don't bump the version are tested but not released. If a
 store rejects the upload, fix the cause and re-run the failed job from the
 Actions tab: the version isn't tagged until both stores have it.
 
-The workflow needs two repository secrets (**Settings → Secrets and variables → Actions**):
+### One-time setup
 
-- `VSCE_PAT`: an Azure DevOps personal access token with the **Marketplace (Manage)**
-  scope, from an account that can publish as `mepolabs`.
-- `OVSX_PAT`: an [Open VSX access token](https://open-vsx.org/user-settings/tokens)
-  from an account that's a member of the `mepolabs` namespace.
+The workflow needs three repository secrets (**Settings → Secrets and
+variables → Actions**): `AZURE_CLIENT_ID`, `AZURE_TENANT_ID` and `OVSX_PAT`.
+
+**VS Code Marketplace.** The workflow signs in with Microsoft Entra ID rather
+than a personal access token, since Azure DevOps stops supporting the global
+tokens the Marketplace needs on 1 December 2026. Nothing expires and there's
+no token to store. It's free and needs no Azure subscription.
+
+1. In the [Azure portal](https://portal.azure.com), signed in with the Microsoft
+   account that owns the `mepolabs` publisher, open **Microsoft Entra ID →
+   App registrations → New registration**. Name it (say, `agent-walkthrough-release`),
+   keep **Single tenant**, and register.
+2. From its **Overview**, save the **Application (client) ID** as the
+   `AZURE_CLIENT_ID` secret and the **Directory (tenant) ID** as `AZURE_TENANT_ID`.
+3. In the app, open **Certificates & secrets → Federated credentials → Add
+   credential**, choose **GitHub Actions deploying Azure resources**, and enter
+   organization `mepolabs`, repository `agent-walkthrough`, entity type
+   **Branch**, branch `main`. Give it any name and add it.
+4. Get the app's Marketplace profile ID. Either run the release workflow once
+   (the Marketplace job fails, but its **Show the app's Marketplace profile ID**
+   step prints the ID), or, with the Azure CLI and a temporary client secret
+   from **Certificates & secrets**:
+
+   ```sh
+   az login --service-principal --username <client-id> --password <secret> --tenant <tenant-id> --allow-no-subscriptions
+   az rest --url https://app.vssps.visualstudio.com/_apis/profile/profiles/me \
+     --resource 499b84ac-1321-427f-aa17-267ca6975798 --query id --output tsv
+   ```
+
+   Delete the temporary secret afterwards.
+5. On the [Marketplace publisher page](https://marketplace.visualstudio.com/manage/publishers/mepolabs),
+   open **Members → Add**, paste the profile ID, and give it the **Contributor**
+   role. Then re-run the failed Marketplace job if you used the workflow in step 4.
+
+**Open VSX.** Sign in at [open-vsx.org](https://open-vsx.org) with GitHub,
+make sure you're a member of the `mepolabs` namespace, create an
+[access token](https://open-vsx.org/user-settings/tokens), and save it as the
+`OVSX_PAT` secret.
 
 ## Pull requests
 

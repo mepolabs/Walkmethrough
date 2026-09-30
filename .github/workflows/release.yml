@@ -5,9 +5,14 @@
 # To release, bump `version` in extension/package.json (and add its section to
 # extension/CHANGELOG.md) in the pull request, and merge it.
 #
-# Needs two repository secrets:
-#   VSCE_PAT  Azure DevOps token with Marketplace (Manage) scope for the `mepolabs` publisher
-#   OVSX_PAT  Open VSX access token for the `mepolabs` namespace
+# The VS Code Marketplace is published to with Microsoft Entra ID, not a
+# personal access token (Azure DevOps retires those on 2026-12-01): the job
+# signs in as an Entra app registration that trusts this repository's main
+# branch, and that app is a member of the `mepolabs` publisher. Setup steps
+# are in CONTRIBUTING.md. Needs three repository secrets:
+#   AZURE_CLIENT_ID  the app registration's Application (client) ID
+#   AZURE_TENANT_ID  its Directory (tenant) ID
+#   OVSX_PAT         Open VSX access token for the `mepolabs` namespace
 name: Release extension
 
 on:
@@ -82,6 +87,9 @@ jobs:
     needs: build
     if: needs.build.outputs.release == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # to sign in to Entra ID as this repository
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -94,10 +102,18 @@ jobs:
         with:
           name: vsix
           path: extension
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+      # The ID to add to the publisher as a member (see CONTRIBUTING.md). Not a secret.
+      - name: Show the app's Marketplace profile ID
+        run: |
+          az rest --url https://app.vssps.visualstudio.com/_apis/profile/profiles/me \
+            --resource 499b84ac-1321-427f-aa17-267ca6975798 --query id --output tsv
       - name: Publish to the VS Code Marketplace
-        run: npx vsce publish --packagePath "agent-walkthrough-${{ needs.build.outputs.version }}.vsix" --skip-duplicate
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: npx vsce publish --azure-credential --packagePath "agent-walkthrough-${{ needs.build.outputs.version }}.vsix" --skip-duplicate
 
   open-vsx:
     needs: build
