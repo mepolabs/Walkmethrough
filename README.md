@@ -6,6 +6,8 @@
 **See how your coding agent's change actually works, step by step in VS Code,
 and send comments straight back to the agent.**
 
+![Agent Walkthrough demo: stepping through an agent's change in VS Code and leaving comments](docs/demo.gif)
+
 ## Why
 
 When a coding agent (Claude Code, Codex, GitHub Copilot, Cursor) finishes a
