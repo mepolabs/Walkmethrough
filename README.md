@@ -34,8 +34,9 @@ the code.
 5. **Nothing slips through.** A coverage check flags any changed lines the
    walkthrough didn't explain.
 
-> **Status:** early (v0.1). Writing and reviewing walkthroughs works end to
-> end.
+> **Status:** early (v0.2). Writing and reviewing walkthroughs works end to
+> end. If it's useful to you, a ⭐ helps other people find it, and
+> **Watch → Custom → Releases** tells you when a new version is out.
 
 ## Install
 
@@ -80,7 +81,7 @@ git clone https://github.com/mepolabs/agent-walkthrough.git
 cd agent-walkthrough/extension
 npm ci
 npm run package
-code --install-extension agent-walkthrough-0.1.0.vsix
+code --install-extension agent-walkthrough-*.vsix
 ```
 
 </details>

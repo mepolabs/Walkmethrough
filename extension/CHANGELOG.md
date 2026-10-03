@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1
+
+- The Marketplace and Open VSX pages now show the demo GIF.
+- Listed under the **AI** category.
+
 ## 0.2.0
 
 - Fixed: walkthroughs could only be opened from the first workspace folder's
