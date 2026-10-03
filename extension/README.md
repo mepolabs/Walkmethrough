@@ -8,6 +8,8 @@ writes `.walkthrough/<session>.yaml`: the code it changed, in execution order,
 with a short explanation per step. This extension turns that file into a guided
 review.
 
+![Agent Walkthrough demo: stepping through an agent's change in VS Code and leaving comments](https://raw.githubusercontent.com/mepolabs/agent-walkthrough/main/docs/demo.gif)
+
 ## Features
 
 - **Step through the change.** **Next** / **Back** (Alt+] / Alt+[) open each
@@ -68,5 +70,9 @@ Theme colours: `agent-walkthrough.stepHighlight`, `agent-walkthrough.stepGutter`
 
 - [Project README](https://github.com/mepolabs/agent-walkthrough#readme): install the skill, the file formats
 - [Issues](https://github.com/mepolabs/agent-walkthrough/issues)
+
+If it's useful, a ⭐ on [GitHub](https://github.com/mepolabs/agent-walkthrough)
+helps other people find it. To hear about new versions, click **Watch →
+Custom → Releases** there.
 
 MIT licensed.
